@@ -17,6 +17,11 @@ parser.add_argument("sample_list_file", metavar = "sample_list.txt", default = N
 parser.add_argument("output_prefix", metavar = "output_prefix", default = None, type = str, 
                     help = "the prefix of the output")
 
+parser.add_argument("resource_dir", metavar = "resource_dir", default = None, type = str,
+                    help = "the path to resource directory for junc_utils")
+
+parser.add_argument("reference_genome", metavar = "reference.fa", default = None, type = str,
+                    help = "the path to the reference genome sequence")
 
 parser.add_argument("--pooled_control_file", default = None, type = str,
                     help = "the path to control data created by junc_utils control_merge (default: %(default)s)")
