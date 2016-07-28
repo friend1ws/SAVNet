@@ -18,7 +18,6 @@ def main(args):
 
     subprocess.call(["junc_utils", "associate", args.output_prefix + ".mut_merged.txt", args.output_prefix + ".SJ_merged.annot.txt",
                      args.output_prefix, args.resource_dir, "--reference_genome", args.reference_genome, "-f", "anno"])
-    """
 
     utils.add_gene_symbol(args.output_prefix + ".splicing_mutation.txt", args.output_prefix + ".splicing_mutation.proc.txt")
 
@@ -27,5 +26,9 @@ def main(args):
                                 args.output_prefix + ".splicing_mutation.proc.count_summary.txt",
                                 args.output_prefix + ".splicing_mutation.proc.mut_info.txt", 
                                 args.output_prefix + ".splicing_mutation.proc.SJ_info.txt")
+    """
+
+    utils.check_significance(args.output_prefix + ".splicing_mutation.proc.count_summary.txt",
+                             args.output_prefix + ".splicing_mutation.proc.count_summary.BIC.txt")
 
 
