@@ -22,3 +22,10 @@ def main(args):
 
     utils.add_gene_symbol(args.output_prefix + ".splicing_mutation.txt", args.output_prefix + ".splicing_mutation.proc.txt")
 
+    utils.organize_mut_SJ_count(args.output_prefix + ".splicing_mutation.proc.txt",
+                                args.output_prefix + ".mut_merged.txt",
+                                args.output_prefix + ".splicing_mutation.proc.count_summary.txt",
+                                args.output_prefix + ".splicing_mutation.proc.mut_info.txt", 
+                                args.output_prefix + ".splicing_mutation.proc.SJ_info.txt")
+
+
