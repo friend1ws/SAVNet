@@ -18,6 +18,9 @@ parser.add_argument("output_prefix", metavar = "output_prefix", default = None, 
                     help = "the prefix of the output")
 
 
+parser.add_argument("--pooled_control_file", default = None, type = str,
+                    help = "the path to control data created by junc_utils control_merge (default: %(default)s)")
+
 args = parser.parse_args()
 
 main(args)
