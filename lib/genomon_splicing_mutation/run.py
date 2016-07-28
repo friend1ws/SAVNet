@@ -32,3 +32,10 @@ def main(args):
                              args.output_prefix + ".splicing_mutation.proc.count_summary.BIC.txt")
 
 
+    utils.summarize_result(args.output_prefix + ".splicing_mutation.proc.count_summary.BIC.txt",
+                           args.output_prefix + ".genomon_splicing_mutation.result.txt",
+                           args.sample_list_file,
+                           args.output_prefix + ".splicing_mutation.proc.mut_info.txt",
+                           args.output_prefix + ".splicing_mutation.proc.SJ_info.txt")
+
+
