@@ -1,6 +1,6 @@
 #! /usr/bin/env python
 
-import sys, glob, subprocess, re, math, pysam
+import sys, glob, subprocess, re, math, copy, pysam
 
 def merge_SJ2(sample_list_file, output_file, control_file, junc_num_thres):
 
@@ -432,6 +432,47 @@ def check_links(mutation_state, splicing_count, link, margin):
     return pass_link_vector
 
 
+def cluster_link(link):
+
+    link_vector = link.split(';')
+    mut_id2sp_id = {}
+    for i in range(len(link_vector)):
+        mut_id, sp_id = link_vector[i].split(',')
+        if mut_id not in mut_id2sp_id: mut_id2sp_id[mut_id] = []
+        mut_id2sp_id[mut_id].append(sp_id)
+
+    link_str = []
+    mut_ids = mut_id2sp_id.keys()
+    active_ids = copy.deepcopy(mut_ids) # deep copy
+    for i in range(len(mut_ids)):
+
+        if mut_ids[i] not in active_ids: continue
+
+        clustered_ids = [mut_ids[i]]
+
+        no_more_cluster = 0
+        while no_more_cluster == 0:
+            
+            no_more_cluster = 1
+            for j in range(len(active_ids)):
+                if active_ids[j] in clustered_ids: continue
+                is_cluster = 0
+                for k in range(len(clustered_ids)):
+                    if len(set(mut_id2sp_id[clustered_ids[k]]) & set(mut_id2sp_id[active_ids[j]])) > 0:
+                        clustered_ids.append(active_ids[j])
+                        no_more_cluster = 0
+                        break
+ 
+        link_strs = []
+        for j in range(len(clustered_ids)):
+            link_strs.append(';'.join([clustered_ids[j] + ',' + x for x in mut_id2sp_id[clustered_ids[j]]]))
+            active_ids.remove(clustered_ids[j])
+            
+        link_str.append(';'.join(link_strs))
+
+    return link_str
+
+
 def convert_pruned_file(input_file, output_file, margin):
 
     hout = open(output_file, 'w')
@@ -449,7 +490,9 @@ def convert_pruned_file(input_file, output_file, margin):
             pass_link = [link_vector[i] for i in range(len(link_vector)) if pass_link_vector[i] == 1]
 
             if len(pass_link) > 0:
-                print >> hout, gene + '\t' + mutation_state + '\t' + splicing_count + '\t' + ';'.join(pass_link)
+                clusters = cluster_link(';'.join(pass_link))
+                for cluster in sorted(clusters):
+                    print >> hout, gene + '\t' + mutation_state + '\t' + splicing_count + '\t' + cluster
 
     hout.close()
 
@@ -562,8 +605,8 @@ def check_significance(input_file, output_file):
     hout.close()
 
 
-def summarize_result(input_file, output_file, sample_list_file, mut_info_file, SJ_info_file):
 
+def summarize_result(input_file, output_file, sample_list_file, mut_info_file, SJ_info_file):
 
     id2sample = {}
     temp_id = "1"
@@ -628,4 +671,5 @@ def summarize_result(input_file, output_file, sample_list_file, mut_info_file, S
                                str(round(float(BIC0) - float(BIC_min), 4))
 
     hout.close()
+
 
