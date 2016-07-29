@@ -396,7 +396,7 @@ def organize_mut_SJ_count(input_file, mut2sample_file, output_count_file, output
     hout3.close()
 
 
-def check_links(mutation_state, splicing_count, link, margin):
+def simple_link_effect_check(mutation_state, splicing_count, link, pseudo_count = 0.1):
 
     mutation_states = mutation_state.split(';')
     splicing_counts = splicing_count.split(';')
@@ -411,7 +411,7 @@ def check_links(mutation_state, splicing_count, link, margin):
             mut_vector[int(sample_id) - 1] = int(mut_id)
 
     # pass_links 
-    pass_link_vector = [0] * len(link_vector)
+    effect_size_vector = [0] * len(link_vector)
 
     # simple check for each link
     for i in range(len(link_vector)):
@@ -427,9 +427,9 @@ def check_links(mutation_state, splicing_count, link, margin):
         mean_null = float(count_sum_null) / sample_sum_null if sample_sum_null > 0 and count_sum_null > 0 else 0.0
         mean_target = float(count_sum_target) / sample_sum_target if sample_sum_target > 0 and count_sum_target > 0 else 0.0
 
-        if mean_target > margin * mean_null: pass_link_vector[i] = 1
+        effect_size_vector[i] = (float(mean_target) + pseudo_count) / (float(mean_null) + pseudo_count)
 
-    return pass_link_vector
+    return effect_size_vector 
 
 
 def cluster_link(link):
@@ -484,15 +484,31 @@ def convert_pruned_file(input_file, output_file, margin):
             splicing_count = F[2]
             link = F[3]
 
-            pass_link_vector = check_links(mutation_state, splicing_count, link, margin)
+            effect_size_vector = simple_link_effect_check(mutation_state, splicing_count, link)
+            
+            # print F[0]
+            # print '\t'.join([str(x) for x in effect_size_vector])
+ 
             link_vector = link.split(';')
 
-            pass_link = [link_vector[i] for i in range(len(link_vector)) if pass_link_vector[i] == 1]
+            link2effect_size = {}
+            for i in range(len(link_vector)):
+                link2effect_size[link_vector[i]] = effect_size_vector[i]
+
+            pass_link = [link_vector[i] for i in range(len(link_vector)) if effect_size_vector[i] >= margin]
 
             if len(pass_link) > 0:
-                clusters = cluster_link(';'.join(pass_link))
-                for cluster in sorted(clusters):
-                    print >> hout, gene + '\t' + mutation_state + '\t' + splicing_count + '\t' + cluster
+                clustered_sets = cluster_link(';'.join(pass_link))
+                for sub_cluster in sorted(clustered_sets):
+                    sub_cluster_link = sub_cluster.split(';')
+                    # maximum number is 10
+                    if len(sub_cluster_link) >= 10:
+
+                        sub_cluster_effect_size_vector = [link2effect_size[x] for x in sub_cluster_link]
+                        temp_margin = sorted(sub_cluster_effect_size_vector, reverse=True)[9]
+                        sub_cluster_link = [sub_cluster_link[i] for i in range(len(sub_cluster_link)) if sub_cluster_effect_size_vector[i] >= temp_margin]
+
+                    print >> hout, gene + '\t' + mutation_state + '\t' + splicing_count + '\t' + ';'.join(sub_cluster_link)
 
     hout.close()
 
