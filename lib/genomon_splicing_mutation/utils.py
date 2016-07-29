@@ -396,6 +396,64 @@ def organize_mut_SJ_count(input_file, mut2sample_file, output_count_file, output
     hout3.close()
 
 
+def check_links(mutation_state, splicing_count, link, margin):
+
+    mutation_states = mutation_state.split(';')
+    splicing_counts = splicing_count.split(';')
+    link_vector = link.split(';')
+
+    sample_num = len(splicing_counts[0].split(','))
+
+    mut_vector = [0] * sample_num
+    for j in range(len(mutation_states)):
+        mut_id, sample_id_str = mutation_states[j].split(':')
+        for sample_id in sample_id_str.split(','):
+            mut_vector[int(sample_id) - 1] = int(mut_id)
+
+    # pass_links 
+    pass_link_vector = [0] * len(link_vector)
+
+    # simple check for each link
+    for i in range(len(link_vector)):
+        mut_id, sp_id = link_vector[i].split(',')
+        splicing_cont_vector = splicing_counts[int(sp_id) - 1].split(',') 
+    
+        sample_sum_null = len([j for j in range(sample_num) if mut_vector[j] == 0])
+        sample_sum_target = len([j for j in range(sample_num) if mut_vector[j] == int(mut_id)])
+    
+        count_sum_null = sum([int(splicing_cont_vector[j]) for j in range(sample_num) if mut_vector[j] == 0])
+        count_sum_target = sum([int(splicing_cont_vector[j]) for j in range(sample_num) if mut_vector[j] == int(mut_id)])
+ 
+        mean_null = float(count_sum_null) / sample_sum_null if sample_sum_null > 0 and count_sum_null > 0 else 0.0
+        mean_target = float(count_sum_target) / sample_sum_target if sample_sum_target > 0 and count_sum_target > 0 else 0.0
+
+        if mean_target > margin * mean_null: pass_link_vector[i] = 1
+
+    return pass_link_vector
+
+
+def convert_pruned_file(input_file, output_file, margin):
+
+    hout = open(output_file, 'w')
+    with open(input_file, 'r') as hin:
+        for line in hin:
+            F = line.rstrip('\n').split('\t')
+            gene = F[0]
+            mutation_state = F[1]
+            splicing_count = F[2]
+            link = F[3]
+
+            pass_link_vector = check_links(mutation_state, splicing_count, link, margin)
+            link_vector = link.split(';')
+
+            pass_link = [link_vector[i] for i in range(len(link_vector)) if pass_link_vector[i] == 1]
+
+            if len(pass_link) > 0:
+                print >> hout, gene + '\t' + mutation_state + '\t' + splicing_count + '\t' + ';'.join(pass_link)
+
+    hout.close()
+
+
 
 def get_BIC(mutation_state, splicing_count, configuration, link):
 
@@ -519,7 +577,8 @@ def summarize_result(input_file, output_file, sample_list_file, mut_info_file, S
     with open(mut_info_file, 'r') as hin:
         for line in hin:
             F = line.rstrip('\n').split('\t')
-            mut_id2mut_info[F[0] + '\t' + F[1]] = F[2] + '\t' + F[3]
+            FF = F[3].split(',')
+            mut_id2mut_info[F[0] + '\t' + F[1]] = F[2] + '\t' + FF[0] + ',' + FF[1] + '\t' + FF[2] + '\t' + FF[3]
 
     SJ_id2SJ_info = {}
     with open(SJ_info_file, 'r') as hin:
@@ -528,6 +587,10 @@ def summarize_result(input_file, output_file, sample_list_file, mut_info_file, S
             SJ_id2SJ_info[F[0] + '\t' + F[1]] = F[2] + '\t' + F[3] + '\t' + F[4]
 
     hout = open(output_file, 'w')
+    print >> hout, "Gene_Symbol" + '\t' + "Sample_Name" + '\t' + "Mutation_Pos" + '\t' + "Splicing_Motif_Pos" + '\t' + \
+                   "Mutation_Type1" + '\t' + "Mutation_Type2" + '\t' + "Splicing_Pos" +'\t' + "Splicing_Type" + '\t' + \
+                   "Is_Inframe" + '\t' + "Score"
+
     with open(input_file, 'r') as hin:
         for line in hin:
             F = line.rstrip('\n').split('\t')
@@ -561,7 +624,8 @@ def summarize_result(input_file, output_file, sample_list_file, mut_info_file, S
                 # get SJ info
                 SJ_info = SJ_id2SJ_info[gene + '\t' + SJ_id]
 
-                print >> hout, gene + '\t' + ';'.join(sample_names) + '\t' + mut_info + '\t' + SJ_info
+                print >> hout, gene + '\t' + ';'.join(sample_names) + '\t' + mut_info + '\t' + SJ_info + '\t' + \
+                               str(round(float(BIC0) - float(BIC_min), 4))
 
     hout.close()
 
