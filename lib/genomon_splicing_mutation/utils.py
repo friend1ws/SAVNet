@@ -2,6 +2,123 @@
 
 import sys, glob, subprocess, re, math, pysam
 
+def merge_SJ2(sample_list_file, output_file, control_file, junc_num_thres):
+
+    # list up junctions to pick up
+    junc2list = {}
+    with open(sample_list_file, 'r') as hin1:
+        for line1 in hin1:
+            sample_name, mut_file, SJ_file = line1.rstrip('\n').split('\t')
+            with open(SJ_file, 'r') as hin2:
+                for line2 in hin2:
+                    F = line2.rstrip('\n').split('\t')
+                    if F[5] != "0": continue
+                    if int(F[6]) < junc_num_thres: continue
+                    key = F[0] + '\t' + F[1] + '\t' + F[2]
+                    if key not in junc2list: junc2list[key] = 1
+
+
+    temp_id = 0
+    hout = open(output_file + ".tmp.unsorted.txt", 'w')
+    with open(sample_list_file, 'r') as hin1:
+        for line1 in hin1:
+            sample_name, mut_file, SJ_file = line1.rstrip('\n').split('\t')
+            with open(SJ_file, 'r') as hin2:
+                for line2 in hin2:
+                    F = line2.rstrip('\n').split('\t')
+                    if F[0] + '\t' + F[1] + '\t' + F[2] in junc2list:
+                        print >> hout, F[0] + '\t' + F[1] + '\t' + F[2] + '\t' + str(temp_id) + '\t' + F[6]
+      
+            temp_id = temp_id + 1 
+
+    hout.close()
+
+
+    hout = open(output_file + '.tmp.sorted.txt', 'w')
+    subprocess.call(["sort", "-k1,1", "-k2,2n", "-k3,3n", output_file + ".tmp.unsorted.txt"], stdout = hout)
+    hout.close()
+
+
+    if control_file is not None:
+        control_db = pysam.TabixFile(control_file)
+
+    temp_chr = ""
+    temp_start = ""
+    temp_end = ""
+    temp_count = ["0"] * temp_id
+    hout = open(output_file, 'w')
+    with open(output_file + '.tmp.sorted.txt', 'r') as hin:
+        for line in hin:
+            F = line.rstrip('\n').split('\t')
+
+            if F[1] != temp_start or F[2] != temp_end or F[0] != temp_chr:
+
+                # if not the first line 
+                if temp_chr != "":
+
+                    # skip if the junction is included in the control file
+                    tabixErrorFlag = 0
+                    if control_file is not None:
+                        try:
+                            records = control_db.fetch(temp_chr, int(temp_start) - 5, int(temp_start) + 5)
+                        except Exception as inst:
+                            # print >> sys.stderr, "%s: %s" % (type(inst), inst.args)
+                            # tabixErrorMsg = str(inst.args)
+                            tabixErrorFlag = 1
+
+                    control_flag = 0;
+                    if tabixErrorFlag == 0:
+                        for record_line in records:
+                            record = record_line.split('\t')
+                            if temp_chr == record[0] and temp_start == record[1] and temp_end == record[2]:
+                                control_flag = 1
+
+                    if control_flag == 0:
+                        print >> hout, temp_chr + '\t' + temp_start + '\t' + temp_end + '\t' + ','.join(temp_count)
+
+                temp_chr = F[0]
+                temp_start = F[1]
+                temp_end = F[2]
+                temp_count = ["0"] * temp_id
+
+            if F[1] == "10003993" and F[2] == "10009695":
+                print '\t'.join(F)
+                print ','.join(temp_count)
+
+            temp_count[int(F[3])] = F[4]
+
+    # last check 
+
+    # skip if the junction is included in the control file
+    tabixErrorFlag = 0
+    if control_file is not None:
+        try:
+            records = control_db.fetch(temp_chr, int(temp_start) - 5, int(temp_start) + 5)
+        except Exception as inst:
+            # print >> sys.stderr, "%s: %s" % (type(inst), inst.args)
+            # tabixErrorMsg = str(inst.args)
+            tabixErrorFlag = 1
+            
+    control_flag = 0;
+    if tabixErrorFlag == 0:
+        for record_line in records:
+            record = record_line.split('\t')
+            if temp_chr == record[0] and temp_start == record[1] and temp_end == record[2]:
+                control_flag = 1
+                
+    if control_flag == 0:
+        print >> hout, temp_chr + '\t' + temp_start + '\t' + temp_end + '\t' + ','.join(temp_count)
+
+    hout.close()
+ 
+    # remove intermediate files
+    subprocess.call(["rm", "-rf", output_file + ".tmp.unsorted.txt"])
+    subprocess.call(["rm", "-rf", output_file + ".tmp.sorted.txt"])
+
+    if control_file is not None:
+        control_db.close()
+
+
 def merge_SJ(SJ_list_file, output_file, control_file, junc_num_thres):
 
     if control_file is not None:

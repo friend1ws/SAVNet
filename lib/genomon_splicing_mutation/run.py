@@ -9,8 +9,9 @@ def main(args):
     if output_prefix_dir != "" and not os.path.exists(output_prefix_dir):
        os.makedirs(output_prefix_dir)
 
-    utils.merge_SJ(args.sample_list_file, args.output_prefix + ".SJ_merged.txt", args.pooled_control_file, 2)
+    utils.merge_SJ2(args.sample_list_file, args.output_prefix + ".SJ_merged.txt", args.pooled_control_file, 2)
 
+    """
     utils.merge_mut(args.sample_list_file, args.output_prefix + ".mut_merged.txt")
 
     subprocess.call(["junc_utils", "annotate", args.output_prefix + ".SJ_merged.txt", args.output_prefix + ".SJ_merged.annot.txt", args.resource_dir])
@@ -35,5 +36,5 @@ def main(args):
                            args.sample_list_file,
                            args.output_prefix + ".splicing_mutation.proc.mut_info.txt",
                            args.output_prefix + ".splicing_mutation.proc.SJ_info.txt")
-
-
+    """
+    
