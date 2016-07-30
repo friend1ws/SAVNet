@@ -1,6 +1,6 @@
 #! /usr/bin/env python
 
-import subprocess, os
+import sys, subprocess, os
 import utils
 
 def main(args):
@@ -9,7 +9,7 @@ def main(args):
     if output_prefix_dir != "" and not os.path.exists(output_prefix_dir):
        os.makedirs(output_prefix_dir)
 
-    """ 
+    """
     utils.merge_SJ2(args.sample_list_file, args.output_prefix + ".SJ_merged.txt", args.pooled_control_file, 2)
 
     utils.merge_mut(args.sample_list_file, args.output_prefix + ".mut_merged.txt")
@@ -26,8 +26,11 @@ def main(args):
                                 args.output_prefix + ".splicing_mutation.proc.count_summary.txt",
                                 args.output_prefix + ".splicing_mutation.proc.mut_info.txt", 
                                 args.output_prefix + ".splicing_mutation.proc.SJ_info.txt")
+
     """
-    
+    # true combination    
+    print >> sys.stderr, "evaluating true combinations"
+
     utils.convert_pruned_file(args.output_prefix + ".splicing_mutation.proc.count_summary.txt",
                               args.output_prefix + ".splicing_mutation.proc.count_summary.pruned.txt", 3.0)
 
@@ -41,3 +44,24 @@ def main(args):
                            args.output_prefix + ".splicing_mutation.proc.mut_info.txt",
                            args.output_prefix + ".splicing_mutation.proc.SJ_info.txt")
     
+    # permutation
+    for i in range(10):
+
+        print >> sys.stderr, "evaluating permutation " + str(i)
+    
+        utils.permute_mut_SJ_pairs(args.output_prefix + ".splicing_mutation.proc.count_summary.txt",
+                             args.output_prefix + ".splicing_mutation.proc.count_summary.perm" + str(i) + ".txt")
+    
+        utils.convert_pruned_file(args.output_prefix + ".splicing_mutation.proc.count_summary.perm" + str(i) + ".txt",
+                                  args.output_prefix + ".splicing_mutation.proc.count_summary.pruned.perm" + str(i) + ".txt", 3.0)
+        
+        utils.check_significance(args.output_prefix + ".splicing_mutation.proc.count_summary.pruned.perm" + str(i) + ".txt",
+                                 args.output_prefix + ".splicing_mutation.proc.count_summary.BIC.perm" + str(i) + ".txt")
+
+        
+        utils.summarize_result(args.output_prefix + ".splicing_mutation.proc.count_summary.BIC.perm" + str(i) + ".txt",
+                               args.output_prefix + ".genomon_splicing_mutation.result.perm" + str(i) + ".txt",
+                               args.sample_list_file,
+                               args.output_prefix + ".splicing_mutation.proc.mut_info.txt",
+                               args.output_prefix + ".splicing_mutation.proc.SJ_info.txt")
+

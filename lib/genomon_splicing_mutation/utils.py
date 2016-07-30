@@ -1,6 +1,6 @@
 #! /usr/bin/env python
 
-import sys, glob, subprocess, re, math, copy, pysam
+import sys, glob, subprocess, re, math, copy, random, pysam
 
 def merge_SJ2(sample_list_file, output_file, control_file, junc_num_thres):
 
@@ -636,8 +636,16 @@ def summarize_result(input_file, output_file, sample_list_file, mut_info_file, S
     with open(mut_info_file, 'r') as hin:
         for line in hin:
             F = line.rstrip('\n').split('\t')
-            FF = F[3].split(',')
-            mut_id2mut_info[F[0] + '\t' + F[1]] = F[2] + '\t' + FF[0] + ',' + FF[1] + '\t' + FF[2] + '\t' + FF[3]
+
+            FF = F[3].split(';')
+            info1, info2, info3 = [], [], []
+            for i in range(len(FF)):
+                FFF = FF[i].split(',')
+                info1.append(FFF[0] + ',' + FFF[1])
+                info2.append(FFF[2])
+                info3.append(FFF[3])
+
+            mut_id2mut_info[F[0] + '\t' + F[1]] = F[2] + '\t' + ';'.join(info1) + '\t' + ';'.join(info2) + '\t' + ';'.join(info3)
 
     SJ_id2SJ_info = {}
     with open(SJ_info_file, 'r') as hin:
@@ -686,6 +694,43 @@ def summarize_result(input_file, output_file, sample_list_file, mut_info_file, S
                 print >> hout, gene + '\t' + ';'.join(sample_names) + '\t' + mut_info + '\t' + SJ_info + '\t' + \
                                str(round(float(BIC0) - float(BIC_min), 4))
 
+    hout.close()
+
+
+def permute_mut_SJ_pairs(input_file, output_file):
+
+    sample_num = ""
+    permute = {}
+    hout = open(output_file, 'w')
+    with open(input_file, 'r') as hin:
+        for line in hin:
+    
+            F = line.rstrip('\n').split('\t')
+            gene = F[0]
+            mutation_state = F[1]
+            splicing_count = F[2]
+            link = F[3]
+
+            splicing_count_vector = F[2].split(';')
+            if sample_num == "":
+                sample_num = len(splicing_count_vector[0].split(','))
+                shuffle_order = range(sample_num)
+                no_overlap = 0
+                while no_overlap == 0:
+                    random.shuffle(shuffle_order)
+                    overlap_num = sum([shuffle_order[i] == i for i in range(sample_num)])
+                    if overlap_num == 0: no_overlap = 1
+ 
+                for i in range(sample_num):
+                    permute[str(i + 1)] = str(shuffle_order[i] + 1)
+
+            permute_mutation_states = []
+            for mut_sample in mutation_state.split(';'):
+                mut_id, sample_ids = mut_sample.split(':')
+                permute_mutation_states.append(mut_id + ':' + ','.join([permute[x] for x in sample_ids.split(',')]))
+
+            print >> hout, gene + '\t' + ';'.join(permute_mutation_states) + '\t' + splicing_count + '\t' + link
+    
     hout.close()
 
 
