@@ -277,7 +277,7 @@ def add_gene_symbol(input_file, output_file):
 
 def get_mut_sample_info(mut_info, mut2sample):
     mut_infos = mut_info.split(',')
-    tchr, tstart, tend, tref, talt = mut_infos[0], mut_infos[1], mut_infos[1], mut_infos[3], mut_infos[4]
+    tchr, tstart, tend, tref, talt = mut_infos[0], mut_infos[1], mut_infos[1], mut_infos[2], mut_infos[3]
     # deletion
     if len(tref) > 1:
         tref = tref[1:]
