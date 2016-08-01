@@ -15,7 +15,6 @@ def main(args):
     utils.merge_mut(args.sample_list_file, args.output_prefix + ".mut_merged.txt")
 
     subprocess.call(["junc_utils", "annotate", args.output_prefix + ".SJ_merged.txt", args.output_prefix + ".SJ_merged.annot.txt", args.resource_dir])
-    """
 
     subprocess.call(["junc_utils", "associate", args.output_prefix + ".mut_merged.txt", args.output_prefix + ".SJ_merged.annot.txt",
                      args.output_prefix, args.resource_dir, "--reference_genome", args.reference_genome, "-f", "anno"])
@@ -27,7 +26,8 @@ def main(args):
                                 args.output_prefix + ".splicing_mutation.proc.count_summary.txt",
                                 args.output_prefix + ".splicing_mutation.proc.mut_info.txt", 
                                 args.output_prefix + ".splicing_mutation.proc.SJ_info.txt")
-
+    
+    """
     # true combination    
     print >> sys.stderr, "evaluating true combinations"
 
@@ -36,7 +36,6 @@ def main(args):
 
     utils.check_significance(args.output_prefix + ".splicing_mutation.proc.count_summary.pruned.txt",
                              args.output_prefix + ".splicing_mutation.proc.count_summary.BIC.txt")
-
 
     utils.summarize_result(args.output_prefix + ".splicing_mutation.proc.count_summary.BIC.txt",
                            args.output_prefix + ".genomon_splicing_mutation.result.txt",

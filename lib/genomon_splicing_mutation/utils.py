@@ -664,6 +664,7 @@ def summarize_result(input_file, output_file, sample_list_file, mut_info_file, S
 
             gene = F[0]
             mutation_states = F[1].split(';')
+            splicing_count_vector = F[2].split(';')
             link_vector = F[3].split(';')
             BIC_min = F[4]
             BIC0 = F[5]
@@ -679,11 +680,13 @@ def summarize_result(input_file, output_file, sample_list_file, mut_info_file, S
 
             for active_link in active_link_vector:
                 mut_id, SJ_id = active_link.split(',')
-                
+                current_splicing_counts = splicing_count_vector[int(SJ_id) - 1].split(',')                
+
                 # get sample names
                 sample_names = []
                 for sample_id in mut_id2sample_id[mut_id].split(','):            
-                    sample_names.append(id2sample[sample_id])
+                    if int(current_splicing_counts[int(sample_id) - 1]) > 0:
+                        sample_names.append(id2sample[sample_id])
         
                 # get mutation info
                 mut_info = mut_id2mut_info[gene + '\t' + mut_id]
