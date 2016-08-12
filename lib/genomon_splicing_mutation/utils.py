@@ -8,7 +8,7 @@ def merge_SJ2(sample_list_file, output_file, control_file, junc_num_thres):
     junc2list = {}
     with open(sample_list_file, 'r') as hin1:
         for line1 in hin1:
-            sample_name, mut_file, SJ_file = line1.rstrip('\n').split('\t')
+            sample_name, mut_file, SJ_file, IR_file = line1.rstrip('\n').split('\t')
             with open(SJ_file, 'r') as hin2:
                 for line2 in hin2:
                     F = line2.rstrip('\n').split('\t')
@@ -22,7 +22,7 @@ def merge_SJ2(sample_list_file, output_file, control_file, junc_num_thres):
     hout = open(output_file + ".tmp.unsorted.txt", 'w')
     with open(sample_list_file, 'r') as hin1:
         for line1 in hin1:
-            sample_name, mut_file, SJ_file = line1.rstrip('\n').split('\t')
+            sample_name, mut_file, SJ_file, IR_file = line1.rstrip('\n').split('\t')
             with open(SJ_file, 'r') as hin2:
                 for line2 in hin2:
                     F = line2.rstrip('\n').split('\t')
@@ -196,6 +196,137 @@ def merge_SJ(SJ_list_file, output_file, control_file, junc_num_thres):
 
 
 
+def merge_intron_retention(sample_list_file, output_file, control_file, ratio_thres, num_thres):
+
+    # list up junctions to pick up
+    intron_retention2list = {}
+    header2ind = {}
+    target_header = ["Chr", "Boundary_Pos", "Gene_Symbol", "Motif_Type", "Strand",
+                     "Junction_List", "Gene_ID_List", "Exon_Num_List"]
+
+    with open(sample_list_file, 'r') as hin1:
+        for line1 in hin1:
+            sample_name, mut_file, SJ_file, intron_retention_file = line1.rstrip('\n').split('\t')
+            with open(intron_retention_file, 'r') as hin2:
+                header = hin2.readline().rstrip('\n').split('\t')
+                for (i, cname) in enumerate(header):
+                    header2ind[cname] = i
+
+                for line2 in hin2:
+                    F = line2.rstrip('\n').split('\t')
+                    if int(F[header2ind["Intron_Retention_Read_Count"]]) < num_thres: continue
+                    ratio = 0
+                    if F[header2ind["Edge_Read_Count"]] != "0":
+                        ratio = float(F[header2ind["Intron_Retention_Read_Count"]]) / float(F[header2ind["Edge_Read_Count"]])
+                    if ratio < ratio_thres: continue
+
+                    key = '\t'.join([F[header2ind[x]] for x in target_header])
+
+                    if key not in intron_retention2list: intron_retention2list[key] = 1
+
+
+    temp_id = 0
+    hout = open(output_file + ".tmp.unsorted.txt", 'w')
+    with open(sample_list_file, 'r') as hin1:
+        for line1 in hin1:
+            sample_name, mut_file, SJ_file, intron_retention_file = line1.rstrip('\n').split('\t')
+            with open(intron_retention_file, 'r') as hin2:
+                for line2 in hin2:
+                    F = line2.rstrip('\n').split('\t')
+                    key = '\t'.join([F[header2ind[x]] for x in target_header])
+                    if key in intron_retention2list:
+                        print >> hout, key + '\t' + str(temp_id) + '\t' + F[header2ind["Intron_Retention_Read_Count"]]
+
+            temp_id = temp_id + 1
+
+    hout.close()
+
+
+    hout = open(output_file + '.tmp.sorted.txt', 'w')
+    subprocess.call(["sort", "-k1,1", "-k2,2n", output_file + ".tmp.unsorted.txt"], stdout = hout)
+    hout.close()
+
+    if control_file is not None:
+        control_db = pysam.TabixFile(control_file)
+
+    temp_chr = ""
+    temp_pos = ""
+    temp_key = ""
+    temp_count = ["0"] * temp_id
+    hout = open(output_file, 'w')
+    print >> hout, '\t'.join(target_header) + '\t' + "Read_Count_Vector"
+
+    with open(output_file + '.tmp.sorted.txt', 'r') as hin:
+        for line in hin:
+            F = line.rstrip('\n').split('\t')
+
+            if F[1] != temp_pos or F[0] != temp_chr:
+
+                # if not the first line 
+                if temp_chr != "":
+
+                    # skip if the junction is included in the control file
+                    tabixErrorFlag = 0
+                    if control_file is not None:
+                        try:
+                            records = control_db.fetch(temp_chr, int(temp_pos) - 5, int(temp_pos) + 5)
+                        except Exception as inst:
+                            # print >> sys.stderr, "%s: %s" % (type(inst), inst.args)
+                            # tabixErrorMsg = str(inst.args)
+                            tabixErrorFlag = 1
+
+                    control_flag = 0;
+                    if tabixErrorFlag == 0:
+                        for record_line in records:
+                            record = record_line.split('\t')
+                            if temp_chr == record[0] and temp_pos == record[1]:
+                                control_flag = 1
+
+                    if control_flag == 0:
+                        print >> hout, temp_key + '\t' + ','.join(temp_count)
+
+                temp_chr = F[0]
+                temp_pos = F[1]
+                temp_key = '\t'.join([F[header2ind[x]] for x in target_header])
+                temp_count = ["0"] * temp_id
+
+            temp_count[int(F[8])] = F[9]
+
+
+    # last check 
+    # skip if the junction is included in the control file
+    tabixErrorFlag = 0
+    if control_file is not None:
+        try:
+            records = control_db.fetch(temp_chr, int(temp_pos) - 5, int(temp_pos) + 5)
+        except Exception as inst:
+            # print >> sys.stderr, "%s: %s" % (type(inst), inst.args)
+            # tabixErrorMsg = str(inst.args)
+            tabixErrorFlag = 1
+
+    control_flag = 0;
+    if tabixErrorFlag == 0:
+        for record_line in records:
+            record = record_line.split('\t')
+            if temp_chr == record[0] and temp_pos == record[1]:
+                control_flag = 1
+
+    if control_flag == 0:
+        print >> hout, '\t'.join(F[:8]) + '\t' + ','.join(temp_count)
+
+    hout.close()
+ 
+    # remove intermediate files
+    subprocess.call(["rm", "-rf", output_file + ".tmp.unsorted.txt"])
+    subprocess.call(["rm", "-rf", output_file + ".tmp.sorted.txt"])
+
+    if control_file is not None:
+        control_db.close()
+
+
+
+
+
 def merge_mut(sample_list_file, output_file):
 
 
@@ -227,6 +358,65 @@ def merge_mut(sample_list_file, output_file):
 
     hout.close()
 
+
+def merge_SJ_IR_files(SJ_input_file, IR_input_file, output_file):
+
+    header2ind = {}
+    header = ""
+    hout = open(output_file + ".unsorted", 'w')
+
+    with open(SJ_input_file, 'r') as hin:
+
+        header = hin.readline().rstrip('\n').split('\t')
+        for i in range(len(header)):
+            header2ind[header[i]] = i
+
+        for line in hin:
+            F = line.rstrip('\n').split('\t')
+            genes = F[header2ind["Gene_1"]].split(';') + F[header2ind["Gene_2"]].split(';')
+            genes = list(set(genes))
+
+            if "---" in genes: genes.remove("---")
+            if len(genes) > 0:
+                genes_nm = filter(lambda x: x.find("(NM_") > 0, genes)
+                if len(genes_nm) > 0: genes = genes_nm
+
+            gene = genes[0]
+            gene = re.sub(r"\(N[MR]_\d+\)", "", gene)
+
+            splicing_key = F[header2ind["SJ_1"]] + ':' + F[header2ind["SJ_2"]] + '-' + F[header2ind["SJ_3"]]
+
+            print >> hout, gene + '\t' + splicing_key + '\t' + F[header2ind["Splicing_Class"]] + '\t' + F[header2ind["Is_Inframe"]] + '\t' + \
+                            F[header2ind["SJ_4"]] + '\t' + F[header2ind["Mutation_Key"]] + '\t' + F[header2ind["Motif_Pos"]] + '\t' + \
+                            F[header2ind["Mutation_Type"]] + '\t' + F[header2ind["Is_Canonical"]]
+
+
+    with open(IR_input_file, 'r') as hin:
+
+        header = hin.readline().rstrip('\n').split('\t')
+        for i in range(len(header)):
+            header2ind[header[i]] = i
+
+        for line in hin:
+            F = line.rstrip('\n').split('\t')
+            splicing_key = F[header2ind["Chr"]] + ':' + F[header2ind["Boundary_Pos"]] + '-' + F[header2ind["Boundary_Pos"]]
+            splicing_class = "intron-retention" if F[header2ind["Intron_Retention_Type"]] == "direct-impact" else "opposite-side-intron-retention"
+            print >> hout, F[header2ind["Gene_Symbol"]] + '\t' + splicing_key + '\t' + splicing_class + '\t' + '---' + '\t' + \
+                           F[header2ind["Read_Count_Vector"]] + '\t' + F[header2ind["Mutation_Key"]] + '\t' + \
+                           F[header2ind["Motif_Pos"]] + '\t' + F[header2ind["Mutation_Type"]] + '\t' + F[header2ind["Is_Canonical"]]
+
+    hout.close()
+
+    hout = open(output_file, 'w')
+    print >> hout, '\t'.join(["Gene_Symbol", "Splicing_Key", "Splicing_Class", "Is_Inframe", "Read_Counts",
+                              "Mutation_Key", "Motif_Pos", "Mutation_Type", "Is_Canonical"])
+    hout.close()
+
+    hout = open(output_file, 'a')
+    subprocess.call(["sort", "-k1", output_file + ".unsorted"], stdout = hout)
+    hout.close()
+
+    subprocess.call(["rm", "-rf", output_file + ".unsorted"])
 
 
 def add_gene_symbol(input_file, output_file):
@@ -292,11 +482,11 @@ def get_mut_sample_info(mut_info, mut2sample):
     return(mut2sample[mut])
 
 
-def organize_mut_SJ_count(input_file, mut2sample_file, output_count_file, output_mut_file, output_SJ_file):
+def organize_mut_splicing_count(input_file, mut2sample_file, output_count_file, output_mut_file, output_splicing_file):
 
     hout1 = open(output_count_file, 'w')
     hout2 = open(output_mut_file, 'w')
-    hout3 = open(output_SJ_file, 'w')
+    hout3 = open(output_splicing_file, 'w')
         
     mut2sample = {}
     with open(mut2sample_file, 'r') as hin:
@@ -319,13 +509,13 @@ def organize_mut_SJ_count(input_file, mut2sample_file, output_count_file, output
         temp_mut2sample = []
         temp_mut2id = {}
         temp_id2mut = {}
-        temp_SJ2info = {} 
-        temp_SJ_count = []
-        temp_SJ2id = {} 
-        temp_id2SJ = {}
-        temp_mut_SJ_link = []
+        temp_splicing2info = {} 
+        temp_splicing_count = []
+        temp_splicing2id = {} 
+        temp_id2splicing = {}
+        temp_mut_splicing_link = []
         temp_mut_id = "1"
-        temp_SJ_id = "1"
+        temp_splicing_id = "1"
         for line in hin:
 
             F = line.rstrip('\n').split('\t')
@@ -334,31 +524,31 @@ def organize_mut_SJ_count(input_file, mut2sample_file, output_count_file, output
                 if temp_gene != "":
 
                     # flush the result
-                    print >> hout1, temp_gene + '\t' + ';'.join(temp_mut2sample) + '\t' + ';'.join(temp_SJ_count) + '\t' + ';'.join(temp_mut_SJ_link)
+                    print >> hout1, temp_gene + '\t' + ';'.join(temp_mut2sample) + '\t' + ';'.join(temp_splicing_count) + '\t' + ';'.join(temp_mut_splicing_link)
                 
                     for id in sorted(temp_id2mut):
                         print >> hout2, temp_gene + '\t' + id + '\t' + temp_id2mut[id] + '\t' + ';'.join(temp_mut2info[temp_id2mut[id]])
 
-                    for id in sorted(temp_id2SJ):
-                        print >> hout3, temp_gene + '\t' + id + '\t' + temp_id2SJ[id] + '\t' + temp_SJ2info[temp_id2SJ[id]]
+                    for id in sorted(temp_id2splicing):
+                        print >> hout3, temp_gene + '\t' + id + '\t' + temp_id2splicing[id] + '\t' + temp_splicing2info[temp_id2splicing[id]]
 
                 temp_gene = F[header2ind["Gene_Symbol"]] 
                 temp_mut2info = {} 
                 temp_mut2sample = []
                 temp_mut2id = {}
                 temp_id2mut = {}
-                temp_SJ2info = {} 
-                temp_SJ_count = []
-                temp_SJ2id = {} 
-                temp_id2SJ = {}
-                temp_mut_SJ_link = []
+                temp_splicing2info = {} 
+                temp_splicing_count = []
+                temp_splicing2id = {} 
+                temp_id2splicing = {}
+                temp_mut_splicing_link = []
                 temp_mut_id = "1"
-                temp_SJ_id = "1"
+                temp_splicing_id = "1"
 
 
-            mut = F[header2ind["Mutation_Info"]]
-            sample = get_mut_sample_info(F[header2ind["Mutation_Info"]], mut2sample)
-            mut_info = F[header2ind["Splicing_Motif_Pos"]] + ',' + F[header2ind["Splicing_Mutation_Type"]] + ',' + F[header2ind["Is_Cannonical"]]
+            mut = F[header2ind["Mutation_Key"]]
+            sample = get_mut_sample_info(F[header2ind["Mutation_Key"]], mut2sample)
+            mut_info = F[header2ind["Motif_Pos"]] + ',' + F[header2ind["Mutation_Type"]] + ',' + F[header2ind["Is_Canonical"]]
 
             if mut not in temp_mut2info:
                 temp_mut2info[mut] = []
@@ -370,26 +560,26 @@ def organize_mut_SJ_count(input_file, mut2sample_file, output_count_file, output
             if mut_info not in temp_mut2info[mut]: temp_mut2info[mut].append(mut_info) 
 
 
-            SJ = F[header2ind["SJ_1"]] + ':' + F[header2ind["SJ_2"]] + '-' + F[header2ind["SJ_3"]]
-            if SJ not in temp_SJ2info:
-                temp_SJ2info[SJ] = '\t'.join([F[header2ind[x]] for x in ["Splicing_Class", "Is_Inframe", "Gene_1", "Exon_Num_1", "Is_Boundary_1", "Gene_2", "Exon_Num_2", "Is_Boundary_2"]])
-                temp_SJ2id[SJ] = temp_SJ_id
-                temp_id2SJ[temp_SJ_id] = SJ
-                temp_SJ_count.append(F[header2ind["SJ_4"]])
-                temp_SJ_id = str(int(temp_SJ_id) + 1)
+            splicing_key = F[header2ind["Splicing_Key"]]
+            if splicing_key not in temp_splicing2info:
+                temp_splicing2info[splicing_key] = '\t'.join([F[header2ind[x]] for x in ["Splicing_Class", "Is_Inframe"]])
+                temp_splicing2id[splicing_key] = temp_splicing_id
+                temp_id2splicing[temp_splicing_id] = splicing_key 
+                temp_splicing_count.append(F[header2ind["Read_Counts"]])
+                temp_splicing_id = str(int(temp_splicing_id) + 1)
 
-            if temp_mut2id[mut] + ',' + temp_SJ2id[SJ] not in temp_mut_SJ_link:
-                temp_mut_SJ_link.append(temp_mut2id[mut] + ',' + temp_SJ2id[SJ])
+            if temp_mut2id[mut] + ',' + temp_splicing2id[splicing_key] not in temp_mut_splicing_link:
+                temp_mut_splicing_link.append(temp_mut2id[mut] + ',' + temp_splicing2id[splicing_key])
 
 
     # last flush
-    print >> hout1, temp_gene + '\t' + ';'.join(temp_mut2sample) + '\t' + ';'.join(temp_SJ_count) + '\t' + ';'.join(temp_mut_SJ_link)
+    print >> hout1, temp_gene + '\t' + ';'.join(temp_mut2sample) + '\t' + ';'.join(temp_splicing_count) + '\t' + ';'.join(temp_mut_splicing_link)
 
     for id in sorted(temp_id2mut):
         print >> hout2, temp_gene + '\t' + id + '\t' + temp_id2mut[id] + '\t' + ';'.join(temp_mut2info[temp_id2mut[id]]) 
 
-    for id in sorted(temp_id2SJ):
-        print >> hout3, temp_gene + '\t' + id + '\t' + temp_id2SJ[id] + '\t' + temp_SJ2info[temp_id2SJ[id]]
+    for id in sorted(temp_id2splicing):
+        print >> hout3, temp_gene + '\t' + id + '\t' + temp_id2splicing[id] + '\t' + temp_splicing2info[temp_id2splicing[id]]
 
     hout1.close()
     hout2.close()
@@ -622,7 +812,7 @@ def check_significance(input_file, output_file):
 
 
 
-def summarize_result(input_file, output_file, sample_list_file, mut_info_file, SJ_info_file):
+def summarize_result(input_file, output_file, sample_list_file, mut_info_file, sp_info_file):
 
     id2sample = {}
     temp_id = "1"
@@ -647,15 +837,15 @@ def summarize_result(input_file, output_file, sample_list_file, mut_info_file, S
 
             mut_id2mut_info[F[0] + '\t' + F[1]] = F[2] + '\t' + ';'.join(info1) + '\t' + ';'.join(info2) + '\t' + ';'.join(info3)
 
-    SJ_id2SJ_info = {}
-    with open(SJ_info_file, 'r') as hin:
+    sp_id2sp_info = {}
+    with open(sp_info_file, 'r') as hin:
         for line in hin:
             F = line.rstrip('\n').split('\t')
-            SJ_id2SJ_info[F[0] + '\t' + F[1]] = F[2] + '\t' + F[3] + '\t' + F[4]
+            sp_id2sp_info[F[0] + '\t' + F[1]] = F[2] + '\t' + F[3] + '\t' + F[4]
 
     hout = open(output_file, 'w')
-    print >> hout, "Gene_Symbol" + '\t' + "Sample_Name" + '\t' + "Mutation_Pos" + '\t' + "Splicing_Motif_Pos" + '\t' + \
-                   "Mutation_Type1" + '\t' + "Mutation_Type2" + '\t' + "Splicing_Pos" +'\t' + "Splicing_Type" + '\t' + \
+    print >> hout, "Gene_Symbol" + '\t' + "Sample_Name" + '\t' + "Mutation_Key" + '\t' + "Motif_Pos" + '\t' + \
+                   "Mutation_Type" + '\t' + "Is_Canonical" + '\t' + "Splicing_Key" +'\t' + "Splicing_Class" + '\t' + \
                    "Is_Inframe" + '\t' + "Score"
 
     with open(input_file, 'r') as hin:
@@ -679,8 +869,8 @@ def summarize_result(input_file, output_file, sample_list_file, mut_info_file, S
             active_link_vector = [link_vector[i] for i in range(len(link_vector)) if conf_min_vector[i] == "1"]
 
             for active_link in active_link_vector:
-                mut_id, SJ_id = active_link.split(',')
-                current_splicing_counts = splicing_count_vector[int(SJ_id) - 1].split(',')                
+                mut_id, sp_id = active_link.split(',')
+                current_splicing_counts = splicing_count_vector[int(sp_id) - 1].split(',')                
 
                 # get sample names
                 sample_names = []
@@ -692,9 +882,9 @@ def summarize_result(input_file, output_file, sample_list_file, mut_info_file, S
                 mut_info = mut_id2mut_info[gene + '\t' + mut_id]
             
                 # get SJ info
-                SJ_info = SJ_id2SJ_info[gene + '\t' + SJ_id]
+                sp_info = sp_id2sp_info[gene + '\t' + sp_id]
 
-                print >> hout, gene + '\t' + ';'.join(sample_names) + '\t' + mut_info + '\t' + SJ_info + '\t' + \
+                print >> hout, gene + '\t' + ';'.join(sample_names) + '\t' + mut_info + '\t' + sp_info + '\t' + \
                                str(round(float(BIC0) - float(BIC_min), 4))
 
     hout.close()
