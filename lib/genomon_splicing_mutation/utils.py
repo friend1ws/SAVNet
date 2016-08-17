@@ -762,6 +762,65 @@ def get_BIC(mutation_state, splicing_count, configuration, link):
    
      
 
+def get_log_marginal_likelihood(mutation_state, splicing_count, configuration, link, alpha0, beta0, alpha1, beta1):
+
+    mutation_states = mutation_state.split(';')
+    splicing_counts = splicing_count.split(';')
+    configuration_vector = configuration.split(',')
+    link_vector = link.split(';')
+
+    # get the number of possible mutations
+    possible_mut_num = 1
+    possible_mutation = [0]
+    for i in range(len(mutation_states)):
+        mut_id, sample_id = mutation_states[i].split(':')
+        if mut_id not in possible_mutation: possible_mutation.append(int(mut_id))
+
+    possible_mut_num = len(possible_mutation)
+    sample_num = len(splicing_counts[0].split(','))
+
+    log_marginal_likelihood = 0
+    for i in range(len(splicing_counts)):
+
+        splicing_cont_vector = splicing_counts[i].split(',')
+        active_mut_list = []
+        # get mutations associated with the current splicing
+        for j in range(len(link_vector)):
+            if int(configuration_vector[j]) == 0: continue
+            mut_id, sp_id = link_vector[j].split(',')
+            if int(sp_id) == i + 1:
+                active_mut_list.append(int(mut_id))
+
+        # param_num = param_num + len(active_mut_list) + 1
+        current_mut_vector = [0] * sample_num
+
+        # set mutation status
+        for j in range(len(mutation_states)):
+            mut_id, sample_id_str = mutation_states[j].split(':')
+            if int(mut_id) in active_mut_list:
+                for sample_id in sample_id_str.split(','):
+                    current_mut_vector[int(sample_id) - 1] = int(mut_id)
+
+        # for inactive mutations
+        sample_sum = len([j for j in range(sample_num) if current_mut_vector[j] == 0])
+        count_sum = sum([int(splicing_cont_vector[j]) for j in range(sample_num) if current_mut_vector[j] == 0])
+        if sample_sum > 0:
+            log_marginal_likelihood = log_marginal_likelihood + math.lgamma(count_sum + alpha0) - math.lgamma(alpha0) + \
+                                      alpha0 * math.log(beta0) - (count_sum + alpha0) * math.log(sample_sum + beta0)
+
+        # for active mutations
+        for k in range(1, possible_mut_num):
+            sample_sum = len([j for j in range(sample_num) if current_mut_vector[j] == k])
+            count_sum = sum([int(splicing_cont_vector[j]) for j in range(sample_num) if current_mut_vector[j] == k])
+            if sample_sum > 0:
+                log_marginal_likelihood = log_marginal_likelihood + math.lgamma(count_sum + alpha1) - math.lgamma(alpha1) + \
+                                          alpha1 * math.log(beta1) - (count_sum + alpha1) * math.log(sample_sum + beta1)
+
+
+    return(log_marginal_likelihood)
+
+
+
 def generate_configurations(dim):
 
     conf = [[0], [1]]
@@ -777,7 +836,7 @@ def generate_configurations(dim):
     return conf
 
 
-def check_significance(input_file, output_file):
+def check_significance(input_file, output_file, log_BF_thres, alpha0, beta0, alpha1, beta1):
 
     hout = open(output_file, 'w')
     with open(input_file, 'r') as hin:
@@ -790,6 +849,34 @@ def check_significance(input_file, output_file):
 
             conf_dim = len(link.split(';'))
 
+            log_MLs_nonnull = []
+            log_ML_null = float("-inf")
+            log_ML_max = float("-inf")
+            conf_max = [0] * conf_dim
+            params_min = "---"
+            conf_num = 0
+            for conf in sorted(generate_configurations(conf_dim)):
+
+                conf_num = conf_num + 1
+                log_ML = get_log_marginal_likelihood(mutation_state, splicing_count, ','.join([str(x) for x in conf]), link,
+                                                     alpha0, beta0, alpha1, beta1)
+                if conf == [0] * conf_dim:
+                    log_ML_null = log_ML
+                else:
+                    log_MLs_nonnull.append(log_ML)
+
+                if log_ML > log_ML_max:
+                    log_ML_max = log_ML
+                    conf_max = conf
+
+            log_BF_sum = (log_ML_max - log_ML_null) + math.log(sum([math.exp(x - log_ML_max) / float(conf_num - 1) for x in log_MLs_nonnull]))
+
+            print gene + '\t' + str(conf_num) + '\t' + str(round((log_ML_max - log_ML_null), 4)) + '\t' + str(round(log_BF_sum, 4))
+            if log_BF_sum > log_BF_thres:
+                print >> hout, '\t'.join(F) + '\t' + str(log_BF_sum) + '\t' + ','.join([str(x) for x in conf_max]) 
+
+            """
+            # BIC based approach, deprecated 
             BIC0 = float("-inf") 
             BIC_min = float("inf")
             conf_min = [0] * conf_dim
@@ -807,6 +894,7 @@ def check_significance(input_file, output_file):
 
             if BIC0 - BIC_min > 10.0:
                 print >> hout, '\t'.join(F) + '\t' + str(BIC_min) + '\t' + str(BIC0) + '\t' + ','.join([str(x) for x in conf_min]) + '\t' + params_min
+            """
 
     hout.close()
 
@@ -856,9 +944,9 @@ def summarize_result(input_file, output_file, sample_list_file, mut_info_file, s
             mutation_states = F[1].split(';')
             splicing_count_vector = F[2].split(';')
             link_vector = F[3].split(';')
-            BIC_min = F[4]
-            BIC0 = F[5]
-            conf_min_vector = F[6].split(',')
+            log_BF = F[4]
+            # log_ML0 = F[5]
+            conf_max_vector = F[5].split(',')
 
             mut_id2sample_id = {}
             for mut_state in mutation_states:
@@ -866,7 +954,7 @@ def summarize_result(input_file, output_file, sample_list_file, mut_info_file, s
                 mut_id2sample_id[mut_id] = sample_ids
 
 
-            active_link_vector = [link_vector[i] for i in range(len(link_vector)) if conf_min_vector[i] == "1"]
+            active_link_vector = [link_vector[i] for i in range(len(link_vector)) if conf_max_vector[i] == "1"]
 
             for active_link in active_link_vector:
                 mut_id, sp_id = active_link.split(',')
@@ -885,7 +973,7 @@ def summarize_result(input_file, output_file, sample_list_file, mut_info_file, s
                 sp_info = sp_id2sp_info[gene + '\t' + sp_id]
 
                 print >> hout, gene + '\t' + ';'.join(sample_names) + '\t' + mut_info + '\t' + sp_info + '\t' + \
-                               str(round(float(BIC0) - float(BIC_min), 4))
+                               str(round(float(log_BF), 4))
 
     hout.close()
 

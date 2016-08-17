@@ -29,6 +29,36 @@ parser.add_argument("--SJ_pooled_control_file", default = None, type = str,
 parser.add_argument("--IR_pooled_control_file", default = None, type = str,
                     help = "the path to control data created by GenomonIntronRetention merge_control (default: %(default)s)")
 
+parser.add_argument("--SJ_num_thres", type = int, default = 2,
+                    help = "extract splicing junctions whose supporting numbers are equal or more than this value \
+                    at least one sample in the cohort (default: %(default)s)")
+
+parser.add_argument("--IR_num_thres", type = int, default = 3,
+                    help = "extract intron retentions whose supporting numbers are equal or more than this value \
+                    and the ratio is equal or more than IR_ratio_thres at least one sample in the cohort (default: %(default)s)")
+
+parser.add_argument("--IR_ratio_thres", type = int, default = 0.05,
+                    help = "extract intron retentions whose ratios (Intron_Retention_Read_Count / Edge_Read_Count) \
+                    is equal or more than this value and supporting numbers are equal or more than IR_num_thres \
+                    at least one sample in the cohort (default: %(default)s)")
+
+parser.add_argument("--alpha0", type = float, default = 1.0,
+                    help = "the shape parameter of prior Gamma Distribution for inactive states")
+
+parser.add_argument("--beta0", type = float, default = 1.0,
+                    help = "the rate parameter of prior Gamma Distribution for inactive states") 
+
+parser.add_argument("--alpha1", type = float, default = 1.0,
+                    help = "the shape parameter of prior Gamma Distribution for active states") 
+
+parser.add_argument("--beta1", type = float, default = 0.01,
+                    help = "the rate parameter of prior Gamma Distribution for active states") 
+
+parser.add_argument("--log_BF_thres", type = float, default = 10.0,
+                    help = "the threshould of logaraithm of Bayes Factor (default: %(default)s)")
+
+parser.add_argument("--effect_size_thres", type = float, default = 3.0,
+                    help = "the thresould of effect size estimator used for simple edge pruning (default: %(default)s")
 
 args = parser.parse_args()
 
