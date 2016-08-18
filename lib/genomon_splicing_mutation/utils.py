@@ -574,7 +574,7 @@ def organize_mut_splicing_count(input_file, mut2sample_file, output_count_file, 
     hout3.close()
 
 
-def simple_link_effect_check(mutation_state, splicing_count, link, pseudo_count = 0.1):
+def simple_link_effect_check(mutation_state, splicing_count, link, weight_vector, pseudo_count = 0.1):
 
     mutation_states = mutation_state.split(';')
     splicing_counts = splicing_count.split(';')
@@ -595,16 +595,26 @@ def simple_link_effect_check(mutation_state, splicing_count, link, pseudo_count 
     for i in range(len(link_vector)):
         mut_id, sp_id = link_vector[i].split(',')
         splicing_cont_vector = splicing_counts[int(sp_id) - 1].split(',') 
-    
+
+        """
         sample_sum_null = len([j for j in range(sample_num) if mut_vector[j] == 0])
         sample_sum_target = len([j for j in range(sample_num) if mut_vector[j] == int(mut_id)])
-    
+        """
+
+        weight_sum_null = sum([float(weight_vector[j]) for j in range(sample_num) if mut_vector[j] == 0])
+        weight_sum_target = sum([float(weight_vector[j]) for j in range(sample_num) if mut_vector[j] == int(mut_id)])
+
         count_sum_null = sum([int(splicing_cont_vector[j]) for j in range(sample_num) if mut_vector[j] == 0])
         count_sum_target = sum([int(splicing_cont_vector[j]) for j in range(sample_num) if mut_vector[j] == int(mut_id)])
- 
+
+        """ 
         mean_null = float(count_sum_null) / sample_sum_null if sample_sum_null > 0 and count_sum_null > 0 else 0.0
         mean_target = float(count_sum_target) / sample_sum_target if sample_sum_target > 0 and count_sum_target > 0 else 0.0
+        """
 
+        mean_null = float(count_sum_null) / weight_sum_null if weight_sum_null > 0.0 and count_sum_null > 0 else 0.0
+        mean_target = float(count_sum_target) / weight_sum_target if weight_sum_target > 0 and count_sum_target > 0 else 0.0
+    
         effect_size_vector[i] = (float(mean_target) + pseudo_count) / (float(mean_null) + pseudo_count)
 
     return effect_size_vector 
@@ -651,7 +661,7 @@ def cluster_link(link):
     return link_str
 
 
-def convert_pruned_file(input_file, output_file, margin):
+def convert_pruned_file(input_file, output_file, weight_vector, margin):
 
     hout = open(output_file, 'w')
     with open(input_file, 'r') as hin:
@@ -662,7 +672,7 @@ def convert_pruned_file(input_file, output_file, margin):
             splicing_count = F[2]
             link = F[3]
 
-            effect_size_vector = simple_link_effect_check(mutation_state, splicing_count, link)
+            effect_size_vector = simple_link_effect_check(mutation_state, splicing_count, link, weight_vector)
             
             # print F[0]
             # print '\t'.join([str(x) for x in effect_size_vector])
@@ -750,7 +760,7 @@ def get_BIC(mutation_state, splicing_count, configuration, link):
    
      
 
-def get_log_marginal_likelihood(mutation_state, splicing_count, configuration, link, alpha0, beta0, alpha1, beta1):
+def get_log_marginal_likelihood(mutation_state, splicing_count, configuration, link, weight_vector, alpha0, beta0, alpha1, beta1):
 
     mutation_states = mutation_state.split(';')
     splicing_counts = splicing_count.split(';')
@@ -792,17 +802,19 @@ def get_log_marginal_likelihood(mutation_state, splicing_count, configuration, l
         # for inactive mutations
         sample_sum = len([j for j in range(sample_num) if current_mut_vector[j] == 0])
         count_sum = sum([int(splicing_cont_vector[j]) for j in range(sample_num) if current_mut_vector[j] == 0])
+        weight_sum = sum([weight_vector[j] for j in range(sample_num) if current_mut_vector[j] == 0])
         if sample_sum > 0:
             log_marginal_likelihood = log_marginal_likelihood + math.lgamma(count_sum + alpha0) - math.lgamma(alpha0) + \
-                                      alpha0 * math.log(beta0) - (count_sum + alpha0) * math.log(sample_sum + beta0)
+                                      alpha0 * math.log(beta0) - (count_sum + alpha0) * math.log(weight_sum + beta0)
 
         # for active mutations
         for k in range(1, possible_mut_num):
             sample_sum = len([j for j in range(sample_num) if current_mut_vector[j] == k])
             count_sum = sum([int(splicing_cont_vector[j]) for j in range(sample_num) if current_mut_vector[j] == k])
+            weight_sum = sum([weight_vector[j] for j in range(sample_num) if current_mut_vector[j] == k])
             if sample_sum > 0:
                 log_marginal_likelihood = log_marginal_likelihood + math.lgamma(count_sum + alpha1) - math.lgamma(alpha1) + \
-                                          alpha1 * math.log(beta1) - (count_sum + alpha1) * math.log(sample_sum + beta1)
+                                          alpha1 * math.log(beta1) - (count_sum + alpha1) * math.log(weight_sum + beta1)
 
 
     return(log_marginal_likelihood)
@@ -824,7 +836,7 @@ def generate_configurations(dim):
     return conf
 
 
-def check_significance(input_file, output_file, log_BF_thres, alpha0, beta0, alpha1, beta1):
+def check_significance(input_file, output_file, weight_vector, log_BF_thres, alpha0, beta0, alpha1, beta1):
 
     hout = open(output_file, 'w')
     with open(input_file, 'r') as hin:
@@ -847,7 +859,7 @@ def check_significance(input_file, output_file, log_BF_thres, alpha0, beta0, alp
 
                 conf_num = conf_num + 1
                 log_ML = get_log_marginal_likelihood(mutation_state, splicing_count, ','.join([str(x) for x in conf]), link,
-                                                     alpha0, beta0, alpha1, beta1)
+                                                     weight_vector, alpha0, beta0, alpha1, beta1)
                 if conf == [0] * conf_dim:
                     log_ML_null = log_ML
                 else:
@@ -859,7 +871,7 @@ def check_significance(input_file, output_file, log_BF_thres, alpha0, beta0, alp
 
             log_BF_sum = (log_ML_max - log_ML_null) + math.log(sum([math.exp(x - log_ML_max) / float(conf_num - 1) for x in log_MLs_nonnull]))
 
-            print gene + '\t' + str(conf_num) + '\t' + str(round((log_ML_max - log_ML_null), 4)) + '\t' + str(round(log_BF_sum, 4))
+            # print gene + '\t' + str(conf_num) + '\t' + str(round((log_ML_max - log_ML_null), 4)) + '\t' + str(round(log_BF_sum, 4))
             if log_BF_sum > log_BF_thres:
                 print >> hout, '\t'.join(F) + '\t' + str(log_BF_sum) + '\t' + ','.join([str(x) for x in conf_max]) 
 

@@ -66,5 +66,6 @@ class Sample_conf(object):
 
                 if "Weight" in header2ind:
                     self.weights.append(float(F[header2ind["Weight"]]))
+                    # self.weights.append(0.10)
                 else:
                     self.weights.append(1.0)
