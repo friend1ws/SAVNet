@@ -2,32 +2,28 @@
 
 import sys, glob, subprocess, re, math, copy, random, pysam
 
-def merge_SJ2(sample_list_file, output_file, control_file, junc_num_thres):
+def merge_SJ2(SJ_file_list, output_file, control_file, junc_num_thres):
 
     # list up junctions to pick up
     junc2list = {}
-    with open(sample_list_file, 'r') as hin1:
-        for line1 in hin1:
-            sample_name, mut_file, SJ_file, IR_file = line1.rstrip('\n').split('\t')
-            with open(SJ_file, 'r') as hin2:
-                for line2 in hin2:
-                    F = line2.rstrip('\n').split('\t')
-                    if F[5] != "0": continue
-                    if int(F[6]) < junc_num_thres: continue
-                    key = F[0] + '\t' + F[1] + '\t' + F[2]
-                    if key not in junc2list: junc2list[key] = 1
+    for SJ_file in SJ_file_list:
+        with open(SJ_file, 'r') as hin:
+            for line in hin:
+                F = line.rstrip('\n').split('\t')
+                if F[5] != "0": continue
+                if int(F[6]) < junc_num_thres: continue
+                key = F[0] + '\t' + F[1] + '\t' + F[2]
+                if key not in junc2list: junc2list[key] = 1
 
 
     temp_id = 0
     hout = open(output_file + ".tmp.unsorted.txt", 'w')
-    with open(sample_list_file, 'r') as hin1:
-        for line1 in hin1:
-            sample_name, mut_file, SJ_file, IR_file = line1.rstrip('\n').split('\t')
-            with open(SJ_file, 'r') as hin2:
-                for line2 in hin2:
-                    F = line2.rstrip('\n').split('\t')
-                    if F[0] + '\t' + F[1] + '\t' + F[2] in junc2list:
-                        print >> hout, F[0] + '\t' + F[1] + '\t' + F[2] + '\t' + str(temp_id) + '\t' + F[6]
+    for SJ_file in SJ_file_list:
+        with open(SJ_file, 'r') as hin:
+            for line in hin:
+                F = line.rstrip('\n').split('\t')
+                if F[0] + '\t' + F[1] + '\t' + F[2] in junc2list:
+                    print >> hout, F[0] + '\t' + F[1] + '\t' + F[2] + '\t' + str(temp_id) + '\t' + F[6]
       
             temp_id = temp_id + 1 
 
@@ -196,7 +192,7 @@ def merge_SJ(SJ_list_file, output_file, control_file, junc_num_thres):
 
 
 
-def merge_intron_retention(sample_list_file, output_file, control_file, ratio_thres, num_thres):
+def merge_intron_retention(IR_file_list, output_file, control_file, ratio_thres, num_thres):
 
     # list up junctions to pick up
     intron_retention2list = {}
@@ -204,40 +200,36 @@ def merge_intron_retention(sample_list_file, output_file, control_file, ratio_th
     target_header = ["Chr", "Boundary_Pos", "Gene_Symbol", "Motif_Type", "Strand",
                      "Junction_List", "Gene_ID_List", "Exon_Num_List"]
 
-    with open(sample_list_file, 'r') as hin1:
-        for line1 in hin1:
-            sample_name, mut_file, SJ_file, intron_retention_file = line1.rstrip('\n').split('\t')
-            with open(intron_retention_file, 'r') as hin2:
-                header = hin2.readline().rstrip('\n').split('\t')
-                for (i, cname) in enumerate(header):
-                    header2ind[cname] = i
+    for IR_file in IR_file_list:
+        with open(IR_file, 'r') as hin:
+            header = hin.readline().rstrip('\n').split('\t')
+            for (i, cname) in enumerate(header):
+                header2ind[cname] = i
 
-                for line2 in hin2:
-                    F = line2.rstrip('\n').split('\t')
-                    if int(F[header2ind["Intron_Retention_Read_Count"]]) < num_thres: continue
-                    ratio = 0
-                    if F[header2ind["Edge_Read_Count"]] != "0":
-                        ratio = float(F[header2ind["Intron_Retention_Read_Count"]]) / float(F[header2ind["Edge_Read_Count"]])
-                    if ratio < ratio_thres: continue
+            for line in hin:
+                F = line.rstrip('\n').split('\t')
+                if int(F[header2ind["Intron_Retention_Read_Count"]]) < num_thres: continue
+                ratio = 0
+                if F[header2ind["Edge_Read_Count"]] != "0":
+                    ratio = float(F[header2ind["Intron_Retention_Read_Count"]]) / float(F[header2ind["Edge_Read_Count"]])
+                if ratio < ratio_thres: continue
 
-                    key = '\t'.join([F[header2ind[x]] for x in target_header])
+                key = '\t'.join([F[header2ind[x]] for x in target_header])
 
-                    if key not in intron_retention2list: intron_retention2list[key] = 1
+                if key not in intron_retention2list: intron_retention2list[key] = 1
 
 
     temp_id = 0
     hout = open(output_file + ".tmp.unsorted.txt", 'w')
-    with open(sample_list_file, 'r') as hin1:
-        for line1 in hin1:
-            sample_name, mut_file, SJ_file, intron_retention_file = line1.rstrip('\n').split('\t')
-            with open(intron_retention_file, 'r') as hin2:
-                for line2 in hin2:
-                    F = line2.rstrip('\n').split('\t')
-                    key = '\t'.join([F[header2ind[x]] for x in target_header])
-                    if key in intron_retention2list:
-                        print >> hout, key + '\t' + str(temp_id) + '\t' + F[header2ind["Intron_Retention_Read_Count"]]
+    for IR_file in IR_file_list:
+        with open(IR_file, 'r') as hin:
+            for line in hin:
+                F = line.rstrip('\n').split('\t')
+                key = '\t'.join([F[header2ind[x]] for x in target_header])
+                if key in intron_retention2list:
+                    print >> hout, key + '\t' + str(temp_id) + '\t' + F[header2ind["Intron_Retention_Read_Count"]]
 
-            temp_id = temp_id + 1
+        temp_id = temp_id + 1
 
     hout.close()
 
@@ -327,30 +319,26 @@ def merge_intron_retention(sample_list_file, output_file, control_file, ratio_th
 
 
 
-def merge_mut(sample_list_file, output_file):
+def merge_mut(mutation_file_list, output_file):
 
 
     mut2sample = {}
     sample_num = "1"
-    with open(sample_list_file, 'r') as hin1:
-        for line1 in hin1:
-            F1 = line1.rstrip('\n').split('\t')
-            sample = F1[0]
-            mut_file = F1[1]
-            with open(mut_file, 'r') as hin2:
-                for line2 in hin2:
-                    F2 = line2.rstrip('\n').split('\t')
-                    if F2[0].startswith('#'): continue
-                    if F2[0] == "Chr": continue
+    for mut_file in mutation_file_list:
+        with open(mut_file, 'r') as hin2:
+            for line2 in hin2:
+                F2 = line2.rstrip('\n').split('\t')
+                if F2[0].startswith('#'): continue
+                if F2[0] == "Chr": continue
 
-                    key = '\t'.join(F2[0:5])
-            
-                    if key not in mut2sample: 
-                        mut2sample[key] = []
-                   
-                    mut2sample[key].append(sample_num)
+                key = '\t'.join(F2[0:5])
+       
+                if key not in mut2sample: 
+                    mut2sample[key] = []
+              
+                mut2sample[key].append(sample_num)
 
-            sample_num = str(int(sample_num) + 1)
+        sample_num = str(int(sample_num) + 1)
 
     hout = open(output_file, 'w')
     for mut in sorted(mut2sample):
@@ -900,15 +888,21 @@ def check_significance(input_file, output_file, log_BF_thres, alpha0, beta0, alp
 
 
 
-def summarize_result(input_file, output_file, sample_list_file, mut_info_file, sp_info_file):
+def summarize_result(input_file, output_file, sample_name_list, mut_info_file, sp_info_file):
 
     id2sample = {}
     temp_id = "1"
+    for sample_name in sample_name_list:
+        id2sample[temp_id] = sample_name 
+        temp_id = str(int(temp_id) + 1)
+
+    """
     with open(sample_list_file, 'r') as hin:
         for line in hin:
             F = line.rstrip('\n').split('\t')
             id2sample[temp_id] = F[0]
             temp_id = str(int(temp_id) + 1)
+    """
 
     mut_id2mut_info = {}
     with open(mut_info_file, 'r') as hin:
