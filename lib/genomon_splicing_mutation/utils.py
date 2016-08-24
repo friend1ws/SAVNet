@@ -760,11 +760,10 @@ def get_BIC(mutation_state, splicing_count, configuration, link):
    
      
 
-def get_log_marginal_likelihood(mutation_state, splicing_count, configuration, link, weight_vector, alpha0, beta0, alpha1, beta1):
+def get_log_marginal_likelihood(mutation_state, splicing_count, configuration_vector, link, weight_vector, alpha0, beta0, alpha1, beta1):
 
     mutation_states = mutation_state.split(';')
     splicing_counts = splicing_count.split(';')
-    configuration_vector = configuration.split(',')
     link_vector = link.split(';')
 
     sample_num = len(splicing_counts[0].split(','))
@@ -827,6 +826,10 @@ def generate_configurations(dim):
 
 def check_significance(input_file, output_file, weight_vector, log_BF_thres, alpha0, beta0, alpha1, beta1):
 
+    def soft_max(x):
+        x_max = max(x)
+        return(x_max + math.log(sum([math.exp(y - x_max) for y in x]))) 
+
     hout = open(output_file, 'w')
     with open(input_file, 'r') as hin:
         for line in hin:
@@ -838,17 +841,54 @@ def check_significance(input_file, output_file, weight_vector, log_BF_thres, alp
 
             conf_dim = len(link.split(';'))
 
-            log_MLs_nonnull = []
-            log_ML_null = float("-inf")
-            log_ML_max = float("-inf")
-            conf_max = [0] * conf_dim
+            # log_MLs_nonnull = []
+            # log_ML_null = float("-inf")
+            # log_ML_max = float("-inf")
+            # conf_max = [0] * conf_dim
             params_min = "---"
             conf_num = 0
+
+            mut2log_ML_null = {}
+            mut2log_ML_nonnull = {}
+            mut2log_ML_nonnull_max = {}
+            mut2conf_max = {}
+            mut2log_BF = {}
+
+            link_vector = link.split(';')
+            # get mutations associated with the current splicing
+            for e in range(len(link_vector)):
+                mut_id, sp_id = link_vector[e].split(',')
+                mut2log_ML_null[mut_id] = [] 
+                mut2log_ML_nonnull[mut_id] = []
+                mut2log_ML_nonnull_max[mut_id] = float("-inf") 
+                mut2conf_max[mut_id] = [0] * conf_dim
+                mut2log_BF[mut_id] = float("-inf")
+ 
             for conf in sorted(generate_configurations(conf_dim)):
 
+                # get active mutation in the configuration in consideration
+                active_mut_list = []
+                # get mutations associated with the current splicing
+                for j in range(len(link_vector)):
+                    if int(conf[j]) == 0: continue
+                    mut_id, sp_id = link_vector[j].split(',')
+                    active_mut_list.append(mut_id)
+
+
                 conf_num = conf_num + 1
-                log_ML = get_log_marginal_likelihood(mutation_state, splicing_count, ','.join([str(x) for x in conf]), link,
+                log_ML = get_log_marginal_likelihood(mutation_state, splicing_count, conf, link,
                                                      weight_vector, alpha0, beta0, alpha1, beta1)
+
+                for mut_id in mut2log_ML_null:
+                    if mut_id in active_mut_list:
+                        mut2log_ML_nonnull[mut_id].append(log_ML)
+                        if log_ML > mut2log_ML_nonnull_max[mut_id]:
+                            mut2log_ML_nonnull_max[mut_id] = log_ML
+                            mut2conf_max[mut_id] = conf
+                    else:
+                        mut2log_ML_null[mut_id].append(log_ML)
+
+                """
                 if conf == [0] * conf_dim:
                     log_ML_null = log_ML
                 else:
@@ -857,6 +897,7 @@ def check_significance(input_file, output_file, weight_vector, log_BF_thres, alp
                 if log_ML > log_ML_max:
                     log_ML_max = log_ML
                     conf_max = conf
+                """
 
                 """
                 if gene == "DDX17":
@@ -864,19 +905,20 @@ def check_significance(input_file, output_file, weight_vector, log_BF_thres, alp
                     print log_ML
                 """
 
-            if sum([math.exp(x - log_ML_max) / float(conf_num - 1) for x in log_MLs_nonnull]) <= 0:
-                log_BF_sum = -10
-                # print '\t'.join(F)
-                # print log_MLs_nonnull
-                # print log_ML_max
-                # print log_ML_null 
-                # print [math.exp(x - log_ML_max) / float(conf_num - 1) for x in log_MLs_nonnull]
-            else:
-                log_BF_sum = (log_ML_max - log_ML_null) + math.log(sum([math.exp(x - log_ML_max) / float(conf_num - 1) for x in log_MLs_nonnull]))
+            # log_BF_sum = soft_max(log_MLs_nonnull) - math.log(float(conf_num - 1)) - log_ML_null
+
+            for mut_id in mut2log_ML_null:
+
+                mut2log_BF[mut_id] = soft_max(mut2log_ML_nonnull[mut_id]) - soft_max(mut2log_ML_null[mut_id]) - \
+                                     math.log(len(mut2log_ML_nonnull[mut_id])) + math.log(len(mut2log_ML_null[mut_id]))
 
             # print gene + '\t' + str(conf_num) + '\t' + str(round((log_ML_max - log_ML_null), 4)) + '\t' + str(round(log_BF_sum, 4))
-            if log_BF_sum > log_BF_thres:
-                print >> hout, '\t'.join(F) + '\t' + str(log_BF_sum) + '\t' + ','.join([str(x) for x in conf_max]) 
+
+            for mut_id in mut2log_ML_null:
+
+            # if log_BF_sum > log_BF_thres:
+                print >> hout, '\t'.join(F) + '\t' + mut_id + '\t' + str(round(mut2log_BF[mut_id], 4)) + '\t' + ','.join([str(x) for x in mut2conf_max[mut_id]])
+                # print >> hout, '\t'.join(F) + '\t' + str(log_BF_sum) + '\t' + ','.join([str(x) for x in conf_max]) 
 
             """
             # BIC based approach, deprecated 
@@ -953,33 +995,37 @@ def summarize_result(input_file, output_file, sample_name_list, mut_info_file, s
             mutation_states = F[1].split(';')
             splicing_count_vector = F[2].split(';')
             link_vector = F[3].split(';')
-            log_BF = F[4]
+            mut_id = F[4]
+            log_BF = F[5]
             # log_ML0 = F[5]
-            conf_max_vector = F[5].split(',')
+            conf_max_vector = F[6].split(',')
 
             mut_id2sample_id = {}
             for mut_state in mutation_states:
-                mut_id, sample_ids = mut_state.split(':')
-                mut_id2sample_id[mut_id] = sample_ids
+                tmut_id, sample_ids = mut_state.split(':')
+                mut_id2sample_id[tmut_id] = sample_ids
 
 
             active_link_vector = [link_vector[i] for i in range(len(link_vector)) if conf_max_vector[i] == "1"]
 
             for active_link in active_link_vector:
-                mut_id, sp_id = active_link.split(',')
-                current_splicing_counts = splicing_count_vector[int(sp_id) - 1].split(',')                
+                tmut_id, tsp_id = active_link.split(',')
+                if tmut_id != mut_id: continue
+                current_splicing_counts = splicing_count_vector[int(tsp_id) - 1].split(',')                
+
 
                 # get sample names
                 sample_names = []
                 for sample_id in mut_id2sample_id[mut_id].split(','):            
                     if int(current_splicing_counts[int(sample_id) - 1]) > 0:
                         sample_names.append(id2sample[sample_id])
+
         
                 # get mutation info
                 mut_info = mut_id2mut_info[gene + '\t' + mut_id]
             
                 # get SJ info
-                sp_info = sp_id2sp_info[gene + '\t' + sp_id]
+                sp_info = sp_id2sp_info[gene + '\t' + tsp_id]
 
                 print >> hout, gene + '\t' + ';'.join(sample_names) + '\t' + mut_info + '\t' + sp_info + '\t' + \
                                str(round(float(log_BF), 4))
