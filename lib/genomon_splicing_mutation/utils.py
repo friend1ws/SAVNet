@@ -582,11 +582,13 @@ def simple_link_effect_check(mutation_state, splicing_count, link, weight_vector
 
     sample_num = len(splicing_counts[0].split(','))
 
+    """
     mut_vector = [0] * sample_num
     for j in range(len(mutation_states)):
         mut_id, sample_id_str = mutation_states[j].split(':')
         for sample_id in sample_id_str.split(','):
             mut_vector[int(sample_id) - 1] = int(mut_id)
+    """
 
     # pass_links 
     effect_size_vector = [0] * len(link_vector)
@@ -596,21 +598,19 @@ def simple_link_effect_check(mutation_state, splicing_count, link, weight_vector
         mut_id, sp_id = link_vector[i].split(',')
         splicing_cont_vector = splicing_counts[int(sp_id) - 1].split(',') 
 
-        """
-        sample_sum_null = len([j for j in range(sample_num) if mut_vector[j] == 0])
-        sample_sum_target = len([j for j in range(sample_num) if mut_vector[j] == int(mut_id)])
-        """
+        # extract samples with the mutation of the link in consideration
+        mut_vector = [0] * sample_num
+        for j in range(len(mutation_states)):
+            tmut_id, sample_id_str = mutation_states[j].split(':')
+            if tmut_id == mut_id:  
+                for sample_id in sample_id_str.split(','):
+                    mut_vector[int(sample_id) - 1] = 1
 
         weight_sum_null = sum([float(weight_vector[j]) for j in range(sample_num) if mut_vector[j] == 0])
-        weight_sum_target = sum([float(weight_vector[j]) for j in range(sample_num) if mut_vector[j] == int(mut_id)])
+        weight_sum_target = sum([float(weight_vector[j]) for j in range(sample_num) if mut_vector[j] == 1])
 
         count_sum_null = sum([int(splicing_cont_vector[j]) for j in range(sample_num) if mut_vector[j] == 0])
-        count_sum_target = sum([int(splicing_cont_vector[j]) for j in range(sample_num) if mut_vector[j] == int(mut_id)])
-
-        """ 
-        mean_null = float(count_sum_null) / sample_sum_null if sample_sum_null > 0 and count_sum_null > 0 else 0.0
-        mean_target = float(count_sum_target) / sample_sum_target if sample_sum_target > 0 and count_sum_target > 0 else 0.0
-        """
+        count_sum_target = sum([int(splicing_cont_vector[j]) for j in range(sample_num) if mut_vector[j] == 1])
 
         mean_null = float(count_sum_null) / weight_sum_null if weight_sum_null > 0.0 and count_sum_null > 0 else 0.0
         mean_target = float(count_sum_target) / weight_sum_target if weight_sum_target > 0 and count_sum_target > 0 else 0.0
@@ -767,14 +767,6 @@ def get_log_marginal_likelihood(mutation_state, splicing_count, configuration, l
     configuration_vector = configuration.split(',')
     link_vector = link.split(';')
 
-    # get the number of possible mutations
-    possible_mut_num = 1
-    possible_mutation = [0]
-    for i in range(len(mutation_states)):
-        mut_id, sample_id = mutation_states[i].split(':')
-        if mut_id not in possible_mutation: possible_mutation.append(int(mut_id))
-
-    possible_mut_num = len(possible_mutation)
     sample_num = len(splicing_counts[0].split(','))
 
     log_marginal_likelihood = 0
@@ -782,40 +774,37 @@ def get_log_marginal_likelihood(mutation_state, splicing_count, configuration, l
 
         splicing_cont_vector = splicing_counts[i].split(',')
         active_mut_list = []
+
         # get mutations associated with the current splicing
-        for j in range(len(link_vector)):
-            if int(configuration_vector[j]) == 0: continue
-            mut_id, sp_id = link_vector[j].split(',')
+        for e in range(len(link_vector)):
+            if int(configuration_vector[e]) == 0: continue
+            mut_id, sp_id = link_vector[e].split(',')
             if int(sp_id) == i + 1:
                 active_mut_list.append(int(mut_id))
 
         # param_num = param_num + len(active_mut_list) + 1
-        current_mut_vector = [0] * sample_num
+        active_mut_vector = [0] * sample_num
 
         # set mutation status
-        for j in range(len(mutation_states)):
-            mut_id, sample_id_str = mutation_states[j].split(':')
+        for n in range(len(mutation_states)):
+            mut_id, sample_id_str = mutation_states[n].split(':')
             if int(mut_id) in active_mut_list:
                 for sample_id in sample_id_str.split(','):
-                    current_mut_vector[int(sample_id) - 1] = int(mut_id)
+                    active_mut_vector[int(sample_id) - 1] = 1
 
         # for inactive mutations
-        sample_sum = len([j for j in range(sample_num) if current_mut_vector[j] == 0])
-        count_sum = sum([int(splicing_cont_vector[j]) for j in range(sample_num) if current_mut_vector[j] == 0])
-        weight_sum = sum([weight_vector[j] for j in range(sample_num) if current_mut_vector[j] == 0])
+        sample_sum = len([n for n in range(sample_num) if active_mut_vector[n] == 0])
+        count_sum = sum([int(splicing_cont_vector[n]) for n in range(sample_num) if active_mut_vector[n] == 0])
+        weight_sum = sum([weight_vector[n] for n in range(sample_num) if active_mut_vector[n] == 0])
         if sample_sum > 0:
             log_marginal_likelihood = log_marginal_likelihood + math.lgamma(count_sum + alpha0) - math.lgamma(alpha0) + \
                                       alpha0 * math.log(beta0) - (count_sum + alpha0) * math.log(weight_sum + beta0)
 
-        # for active mutations
-        for k in range(1, possible_mut_num):
-            sample_sum = len([j for j in range(sample_num) if current_mut_vector[j] == k])
-            count_sum = sum([int(splicing_cont_vector[j]) for j in range(sample_num) if current_mut_vector[j] == k])
-            weight_sum = sum([weight_vector[j] for j in range(sample_num) if current_mut_vector[j] == k])
-            if sample_sum > 0:
-                log_marginal_likelihood = log_marginal_likelihood + math.lgamma(count_sum + alpha1) - math.lgamma(alpha1) + \
-                                          alpha1 * math.log(beta1) - (count_sum + alpha1) * math.log(weight_sum + beta1)
 
+        for n in range(sample_num):
+            if active_mut_vector[n] == 0: continue
+            log_marginal_likelihood = log_marginal_likelihood + math.lgamma(int(splicing_cont_vector[n]) + alpha1) - math.lgamma(alpha1) + \
+                                      alpha1 * math.log(beta1) - (int(splicing_cont_vector[n]) + alpha1) * math.log(weight_vector[n] + beta1)
 
     return(log_marginal_likelihood)
 
@@ -869,7 +858,21 @@ def check_significance(input_file, output_file, weight_vector, log_BF_thres, alp
                     log_ML_max = log_ML
                     conf_max = conf
 
-            log_BF_sum = (log_ML_max - log_ML_null) + math.log(sum([math.exp(x - log_ML_max) / float(conf_num - 1) for x in log_MLs_nonnull]))
+                """
+                if gene == "DDX17":
+                    print conf
+                    print log_ML
+                """
+
+            if sum([math.exp(x - log_ML_max) / float(conf_num - 1) for x in log_MLs_nonnull]) <= 0:
+                log_BF_sum = -10
+                # print '\t'.join(F)
+                # print log_MLs_nonnull
+                # print log_ML_max
+                # print log_ML_null 
+                # print [math.exp(x - log_ML_max) / float(conf_num - 1) for x in log_MLs_nonnull]
+            else:
+                log_BF_sum = (log_ML_max - log_ML_null) + math.log(sum([math.exp(x - log_ML_max) / float(conf_num - 1) for x in log_MLs_nonnull]))
 
             # print gene + '\t' + str(conf_num) + '\t' + str(round((log_ML_max - log_ML_null), 4)) + '\t' + str(round(log_BF_sum, 4))
             if log_BF_sum > log_BF_thres:
