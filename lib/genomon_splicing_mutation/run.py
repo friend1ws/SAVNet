@@ -25,7 +25,6 @@ def main(args):
     subprocess.call(["junc_utils", "associate", args.output_prefix + ".SJ_merged.annot.txt", args.output_prefix + ".mut_merged.txt", 
                      args.output_prefix + ".SJ_merged.associate.txt", args.resource_dir, "--reference_genome", args.reference_genome,
                      "--mutation_format", "anno"])
-
     ##########
     # intron_retention
     utils.merge_intron_retention(sconf.IR_files, args.output_prefix + ".IR_merged.txt", 
@@ -58,14 +57,14 @@ def main(args):
                              args.output_prefix + ".splicing_mutation.count_summary.BIC.txt",
                              sconf.weights, args.log_BF_thres, args.alpha0, args.beta0, args.alpha1, args.beta1)
 
-    utils.summarize_result(args.output_prefix + ".splicing_mutation.count_summary.BIC.txt",
-                           args.output_prefix + ".genomon_splicing_mutation.result.txt",
-                           sconf.sample_names,
-                           args.output_prefix + ".splicing_mutation.mut_info.txt",
-                           args.output_prefix + ".splicing_mutation.splicing_info.txt")
+    utils.add_annotation(args.output_prefix + ".splicing_mutation.count_summary.BIC.txt",
+                         args.output_prefix + ".splicing_mutation.count_summary.anno.txt",
+                         sconf.sample_names,
+                         args.output_prefix + ".splicing_mutation.mut_info.txt",
+                         args.output_prefix + ".splicing_mutation.splicing_info.txt")
    
     # permutation
-    for i in range(10):
+    for i in range(args.permutation_num):
 
         print >> sys.stderr, "evaluating permutation " + str(i)
     
@@ -81,9 +80,15 @@ def main(args):
                                  sconf.weights, args.log_BF_thres, args.alpha0, args.beta0, args.alpha1, args.beta1)
 
         
-        utils.summarize_result(args.output_prefix + ".splicing_mutation.count_summary.BIC.perm" + str(i) + ".txt",
-                               args.output_prefix + ".genomon_splicing_mutation.result.perm" + str(i) + ".txt",
-                               sconf.sample_names,
-                               args.output_prefix + ".splicing_mutation.mut_info.txt",
-                               args.output_prefix + ".splicing_mutation.splicing_info.txt")
+        utils.add_annotation(args.output_prefix + ".splicing_mutation.count_summary.BIC.perm" + str(i) + ".txt",
+                             args.output_prefix + ".splicing_mutation.count_summary.anno.perm" + str(i) + ".txt",
+                             sconf.sample_names,
+                             args.output_prefix + ".splicing_mutation.mut_info.txt",
+                             args.output_prefix + ".splicing_mutation.splicing_info.txt")
+
+    utils.calculate_q_value(args.output_prefix + ".splicing_mutation.count_summary.anno.txt",
+                            args.output_prefix + ".splicing_mutation.count_summary.anno.perm",
+                            args.output_prefix + ".genomon_splicing_mutation.result.txt",
+                            args.permutation_num)
+
 

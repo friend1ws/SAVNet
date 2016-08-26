@@ -945,7 +945,7 @@ def check_significance(input_file, output_file, weight_vector, log_BF_thres, alp
 
 
 
-def summarize_result(input_file, output_file, sample_name_list, mut_info_file, sp_info_file):
+def add_annotation(input_file, output_file, sample_name_list, mut_info_file, sp_info_file):
 
     id2sample = {}
     temp_id = "1"
@@ -1067,6 +1067,51 @@ def permute_mut_SJ_pairs(input_file, output_file):
 
             print >> hout, gene + '\t' + ';'.join(permute_mutation_states) + '\t' + splicing_count + '\t' + link
     
+    hout.close()
+
+
+def calculate_q_value(input_file, permutation_file_prefix, output_file, permutation_num):
+
+    logBF_values_null = []
+    for i in range(permutation_num):
+        header2ind = {}
+        mut2logBF = {}
+        with open(permutation_file_prefix + str(i) + ".txt", 'r') as hin:
+            header = hin.readline().rstrip('\n').split('\t')
+            for (i, cname) in enumerate(header):
+                header2ind[cname] = i
+            for line in hin:
+                F = line.rstrip('\n').split('\t')
+                mut2logBF[F[header2ind["Mutation_Key"]]] = float(F[header2ind["Score"]])
+
+        logBF_values_null = logBF_values_null + mut2logBF.values()
+
+    # count total mutation num
+    mut_keys = []
+    with open(input_file, 'r') as hin:
+        header = hin.readline().rstrip('\n').split('\t')
+        for (i, cnname) in enumerate(header):
+            header2ind[cname] = i
+        for line in hin:
+            F = line.rstrip('\n').split('\t')
+            mut_keys.append(F[header2ind["Mutation_Key"]])
+
+    mut_keys = list(set(mut_keys))
+
+    # add q-values for each key
+    hout = open(output_file, 'w')
+    header2ind = {}
+    with open(input_file, 'r') as hin:
+        header = hin.readline().rstrip('\n').split('\t')
+        for (i, cnname) in enumerate(header):
+            header2ind[cname] = i
+        print >> hout, '\t'.join(header) + '\t' + "Q_Value"
+        for line in hin:
+            F = line.rstrip('\n').split('\t')
+            qvalue = float(len([x for x in logBF_values_null if x >= float(F[header2ind["Score"]])])) / (len(mut_keys) * permutation_num)
+
+            print >> hout, '\t'.join(F) + '\t' + str(round(qvalue, 4))
+
     hout.close()
 
 
