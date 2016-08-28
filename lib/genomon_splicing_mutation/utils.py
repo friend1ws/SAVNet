@@ -687,11 +687,26 @@ def convert_pruned_file(input_file, output_file, weight_vector, margin):
                 for sub_cluster in sorted(clustered_sets):
                     sub_cluster_link = sub_cluster.split(';')
                     # maximum number is 10
-                    if len(sub_cluster_link) >= 10:
+   
+                    """     
+                    if gene.startswith("COL"): 
+                        print '\t'.join(F)
+                        print sub_cluster_link
+                    """
+
+                    if len(sub_cluster_link) > 10:
 
                         sub_cluster_effect_size_vector = [link2effect_size[x] for x in sub_cluster_link]
-                        temp_margin = sorted(sub_cluster_effect_size_vector, reverse=True)[9]
-                        sub_cluster_link = [sub_cluster_link[i] for i in range(len(sub_cluster_link)) if sub_cluster_effect_size_vector[i] >= temp_margin]
+                        temp_margin = sorted(sub_cluster_effect_size_vector, reverse=True)[10]
+                        sub_cluster_link = [sub_cluster_link[i] for i in range(len(sub_cluster_link)) if sub_cluster_effect_size_vector[i] > temp_margin]
+
+                        """
+                        if gene.startswith("COL"):
+                            print link2effect_size
+                            print sub_cluster_effect_size_vector
+                            print temp_margin
+                            print sub_cluster_link
+                        """
 
                     print >> hout, gene + '\t' + mutation_state + '\t' + splicing_count + '\t' + ';'.join(sub_cluster_link)
 
