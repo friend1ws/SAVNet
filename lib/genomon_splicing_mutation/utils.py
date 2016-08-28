@@ -77,9 +77,6 @@ def merge_SJ2(SJ_file_list, output_file, control_file, junc_num_thres):
                 temp_end = F[2]
                 temp_count = ["0"] * temp_id
 
-            if F[1] == "10003993" and F[2] == "10009695":
-                print '\t'.join(F)
-                print ','.join(temp_count)
 
             temp_count[int(F[3])] = F[4]
 
@@ -1073,8 +1070,8 @@ def permute_mut_SJ_pairs(input_file, output_file):
 def calculate_q_value(input_file, permutation_file_prefix, output_file, permutation_num):
 
     logBF_values_null = []
+    header2ind = {}
     for i in range(permutation_num):
-        header2ind = {}
         mut2logBF = {}
         with open(permutation_file_prefix + str(i) + ".txt", 'r') as hin:
             header = hin.readline().rstrip('\n').split('\t')
@@ -1087,16 +1084,42 @@ def calculate_q_value(input_file, permutation_file_prefix, output_file, permutat
         logBF_values_null = logBF_values_null + mut2logBF.values()
 
     # count total mutation num
-    mut_keys = []
+    mut2logBF = {}
     with open(input_file, 'r') as hin:
         header = hin.readline().rstrip('\n').split('\t')
         for (i, cnname) in enumerate(header):
             header2ind[cname] = i
         for line in hin:
             F = line.rstrip('\n').split('\t')
-            mut_keys.append(F[header2ind["Mutation_Key"]])
+            mut2logBF[F[header2ind["Mutation_Key"]]] = float(F[header2ind["Score"]])            
 
-    mut_keys = list(set(mut_keys))
+    logBF_values_nonnull = mut2logBF.values()
+
+    # obtain q-value for each logBF
+    logBF2FPR = {}
+    with open(input_file, 'r') as hin:
+        header = hin.readline().rstrip('\n').split('\t')
+        for (i, cnname) in enumerate(header):
+            header2ind[cname] = i
+        for line in hin:
+            F = line.rstrip('\n').split('\t')
+            null_num_est = float(len([x for x in logBF_values_null if x >= float(F[header2ind["Score"]])])) / permutation_num
+            nonnull_num = float(len([x for x in logBF_values_nonnull if x >= float(F[header2ind["Score"]])]))
+ 
+            pFPR = null_num_est / nonnull_num if nonnull_num > 0.0 else 0.0
+            logBF2FPR[F[header2ind["Score"]]] = pFPR
+
+    logBF2qvalue = {}
+    temp_min_FPR = float("inf")
+    for logBF in sorted(logBF2FPR, key = float):
+        # print logBF
+        if logBF2FPR[logBF] <= temp_min_FPR:
+            temp_min_FPR = logBF2FPR[logBF]
+        logBF2qvalue[logBF] = temp_min_FPR
+
+    # print '\n'.join([str(x) for x in logBF_values_null])
+
+    # mut_keys = list(set(mut_keys))
 
     # add q-values for each key
     hout = open(output_file, 'w')
@@ -1105,12 +1128,10 @@ def calculate_q_value(input_file, permutation_file_prefix, output_file, permutat
         header = hin.readline().rstrip('\n').split('\t')
         for (i, cnname) in enumerate(header):
             header2ind[cname] = i
-        print >> hout, '\t'.join(header) + '\t' + "Q_Value"
+        print >> hout, '\t'.join(header) + '\t' + "Q_Value" + '\t' + "pFPR"
         for line in hin:
             F = line.rstrip('\n').split('\t')
-            qvalue = float(len([x for x in logBF_values_null if x >= float(F[header2ind["Score"]])])) / (len(mut_keys) * permutation_num)
-
-            print >> hout, '\t'.join(F) + '\t' + str(round(qvalue, 4))
+            print >> hout, '\t'.join(F) + '\t' + str(round(logBF2qvalue[F[header2ind["Score"]]], 4)) + '\t' + str(round(logBF2FPR[F[header2ind["Score"]]], 4))
 
     hout.close()
 
