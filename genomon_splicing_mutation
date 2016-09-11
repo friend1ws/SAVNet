@@ -23,11 +23,17 @@ parser.add_argument("resource_dir", metavar = "resource_dir", default = None, ty
 parser.add_argument("reference_genome", metavar = "reference.fa", default = None, type = str,
                     help = "the path to the reference genome sequence")
 
+parser.add_argument("--sv", action='store_true',
+                    help = "analysis structural variation file")
+
 parser.add_argument("--SJ_pooled_control_file", default = None, type = str,
                     help = "the path to control data created by junc_utils merge_control (default: %(default)s)")
 
 parser.add_argument("--IR_pooled_control_file", default = None, type = str,
                     help = "the path to control data created by GenomonIntronRetention merge_control (default: %(default)s)")
+
+parser.add_argument("--chimera_pooled_control_file", default = None, type = str,
+                    help = "the path to control data created by chimera_utils merge_control (default: %(default)s)")
 
 parser.add_argument("--SJ_num_thres", type = int, default = 2,
                     help = "extract splicing junctions whose supporting numbers are equal or more than this value \
@@ -41,6 +47,12 @@ parser.add_argument("--IR_ratio_thres", type = int, default = 0.05,
                     help = "extract intron retentions whose ratios (Intron_Retention_Read_Count / Edge_Read_Count) \
                     is equal or more than this value and supporting numbers are equal or more than IR_num_thres \
                     at least one sample in the cohort (default: %(default)s)")
+
+parser.add_argument("--chimera_num_thres", type = int, default = 2,
+                    help = "minimum required number of supporting junction read pairs (default: %(default)s)")
+
+parser.add_argument("--chimera_overhang_thres", type = int, default = 30,
+                    help = "region size which have to be covered by aligned short reads (default: %(default)s)")
 
 parser.add_argument("--permutation_num", type = int, default = 100,
                     help = "the number of permutation for calculating false discovery rate")
@@ -63,6 +75,8 @@ parser.add_argument("--log_BF_thres", type = float, default = 5.0,
 parser.add_argument("--effect_size_thres", type = float, default = 3.0,
                     help = "the thresould of effect size estimator used for simple edge pruning (default: %(default)s")
 
+parser.add_argument("--debug", default = False, action = 'store_true', help = "keep intermediate files")
+ 
 args = parser.parse_args()
 
 main(args)
