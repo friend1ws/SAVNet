@@ -2,7 +2,7 @@
 
 import sys, glob, subprocess, re, math, copy, random, pysam
 
-def merge_SJ2(SJ_file_list, output_file, control_file, junc_num_thres):
+def merge_SJ2(SJ_file_list, output_file, control_file, junc_num_thres, is_keep_annotated):
 
     # list up junctions to pick up
     junc2list = {}
@@ -10,7 +10,7 @@ def merge_SJ2(SJ_file_list, output_file, control_file, junc_num_thres):
         with open(SJ_file, 'r') as hin:
             for line in hin:
                 F = line.rstrip('\n').split('\t')
-                if F[5] != "0": continue
+                if is_keep_annotated == False and F[5] != "0": continue
                 if int(F[6]) < junc_num_thres: continue
                 key = F[0] + '\t' + F[1] + '\t' + F[2]
                 if key not in junc2list: junc2list[key] = 1
@@ -53,8 +53,9 @@ def merge_SJ2(SJ_file_list, output_file, control_file, junc_num_thres):
                 if temp_chr != "":
 
                     # skip if the junction is included in the control file
-                    tabixErrorFlag = 0
+                    control_flag = 0
                     if control_file is not None:
+                        tabixErrorFlag = 0
                         try:
                             records = control_db.fetch(temp_chr, int(temp_start) - 5, int(temp_start) + 5)
                         except Exception as inst:
@@ -62,12 +63,11 @@ def merge_SJ2(SJ_file_list, output_file, control_file, junc_num_thres):
                             # tabixErrorMsg = str(inst.args)
                             tabixErrorFlag = 1
 
-                    control_flag = 0;
-                    if tabixErrorFlag == 0:
-                        for record_line in records:
-                            record = record_line.split('\t')
-                            if temp_chr == record[0] and temp_start == record[1] and temp_end == record[2]:
-                                control_flag = 1
+                        if tabixErrorFlag == 0:
+                            for record_line in records:
+                                record = record_line.split('\t')
+                                if temp_chr == record[0] and temp_start == record[1] and temp_end == record[2]:
+                                    control_flag = 1
 
                     if control_flag == 0:
                         print >> hout, temp_chr + '\t' + temp_start + '\t' + temp_end + '\t' + ','.join(temp_count)
@@ -83,8 +83,9 @@ def merge_SJ2(SJ_file_list, output_file, control_file, junc_num_thres):
     # last check 
 
     # skip if the junction is included in the control file
-    tabixErrorFlag = 0
+    control_flag = 0
     if control_file is not None:
+        tabixErrorFlag = 0
         try:
             records = control_db.fetch(temp_chr, int(temp_start) - 5, int(temp_start) + 5)
         except Exception as inst:
@@ -92,12 +93,11 @@ def merge_SJ2(SJ_file_list, output_file, control_file, junc_num_thres):
             # tabixErrorMsg = str(inst.args)
             tabixErrorFlag = 1
             
-    control_flag = 0;
-    if tabixErrorFlag == 0:
-        for record_line in records:
-            record = record_line.split('\t')
-            if temp_chr == record[0] and temp_start == record[1] and temp_end == record[2]:
-                control_flag = 1
+        if tabixErrorFlag == 0:
+            for record_line in records:
+                record = record_line.split('\t')
+                if temp_chr == record[0] and temp_start == record[1] and temp_end == record[2]:
+                    control_flag = 1
                 
     if control_flag == 0:
         print >> hout, temp_chr + '\t' + temp_start + '\t' + temp_end + '\t' + ','.join(temp_count)
