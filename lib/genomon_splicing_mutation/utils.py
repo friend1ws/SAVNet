@@ -472,6 +472,7 @@ def merge_sv(sv_file_list, output_file):
                 F2 = line2.rstrip('\n').split('\t')
                 if F2[0].startswith('#'): continue
                 if F2[0] == "Chr_1": continue
+                if F2[0] == "": continue
 
                 key = '\t'.join(F2[0:7])
 
@@ -615,6 +616,9 @@ def merge_SJ_IR_chimera_files_sv(SJ_input_file, IR_input_file, chimera_input_fil
             gene2 = gene_filter(F[header2ind["Gene_2"]].split(';'))
             gene = list(set(gene1) & set(gene2))
             if len(gene) == 0: continue
+
+            # currently, only consider exon_reusage and unspliced_chimera
+            if F[header2ind["Chimera_Class"]] not in ["exon_reusage", "unspliced_chimera"]: continue
 
             splicing_key = ','.join([F[header2ind[x]] for x in ["Chr_1", "Pos_1", "Dir_1", "Chr_2", "Pos_2", "Dir_2", "Inserted_Seq"]])
             print >> hout, gene[0] + '\t' + splicing_key + '\t' + F[header2ind["Chimera_Class"]] + '\t' + "---" + '\t' + \

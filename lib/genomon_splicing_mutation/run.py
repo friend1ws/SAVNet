@@ -48,19 +48,20 @@ def main(args):
 
         utils.merge_sv(sconf.sv_files, args.output_prefix + ".sv_merged.txt")
 
-        """
         ##########
         # splicing_junction
+        """
         utils.merge_SJ2(sconf.SJ_files, args.output_prefix + ".SJ_merged.txt", args.SJ_pooled_control_file, args.SJ_num_thres)
 
         subprocess.call(["junc_utils", "annotate", args.output_prefix + ".SJ_merged.txt", args.output_prefix + ".SJ_merged.annot.txt", args.resource_dir])
-
+        """
         subprocess.call(["junc_utils", "associate", args.output_prefix + ".SJ_merged.annot.txt", args.output_prefix + ".sv_merged.txt",
                          args.output_prefix + ".SJ_merged.associate.txt", args.resource_dir, "--sv"])
         ##########
         # intron_retention
         utils.merge_intron_retention(sconf.IR_files, args.output_prefix + ".IR_merged.txt",
                                      args.IR_pooled_control_file, args.IR_ratio_thres, args.IR_num_thres)
+
         subprocess.call(["intron_retention_utils", "associate", args.output_prefix + ".IR_merged.txt",
                          args.output_prefix + ".sv_merged.txt", args.output_prefix + ".IR_merged.associate.txt",
                          "--sv"])
@@ -72,7 +73,6 @@ def main(args):
         subprocess.call(["chimera_utils", "associate", "--is_grc", args.output_prefix + ".chimera_merged.txt",
                          args.output_prefix + ".sv_merged.txt", args.output_prefix + ".chimera_merged.associate.txt"])
         ##########
-        """
 
         utils.merge_SJ_IR_chimera_files_sv(args.output_prefix + ".SJ_merged.associate.txt",
                                            args.output_prefix + ".IR_merged.associate.txt",
