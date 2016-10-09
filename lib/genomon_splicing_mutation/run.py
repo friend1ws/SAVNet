@@ -16,6 +16,7 @@ def main(args):
 
     if args.sv == False:
 
+
         utils.merge_mut(sconf.mut_files, args.output_prefix + ".mut_merged.txt")
         ##########
         # splicing_junction

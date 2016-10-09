@@ -220,6 +220,8 @@ def merge_intron_retention(IR_file_list, output_file, control_file, ratio_thres,
     hout = open(output_file + ".tmp.unsorted.txt", 'w')
     for IR_file in IR_file_list:
         with open(IR_file, 'r') as hin:
+            header = hin.readline().rstrip('\n').split('\t')
+
             for line in hin:
                 F = line.rstrip('\n').split('\t')
                 key = '\t'.join([F[header2ind[x]] for x in target_header])
@@ -284,8 +286,9 @@ def merge_intron_retention(IR_file_list, output_file, control_file, ratio_thres,
 
     # last check 
     # skip if the junction is included in the control file
-    tabixErrorFlag = 0
+    control_flag = 0
     if control_file is not None:
+        tabixErrorFlag = 0
         try:
             records = control_db.fetch(temp_chr, int(temp_pos) - 5, int(temp_pos) + 5)
         except Exception as inst:
@@ -293,15 +296,15 @@ def merge_intron_retention(IR_file_list, output_file, control_file, ratio_thres,
             # tabixErrorMsg = str(inst.args)
             tabixErrorFlag = 1
 
-    control_flag = 0;
-    if tabixErrorFlag == 0:
-        for record_line in records:
-            record = record_line.split('\t')
-            if temp_chr == record[0] and temp_pos == record[1]:
-                control_flag = 1
+        if tabixErrorFlag == 0:
+            for record_line in records:
+                record = record_line.split('\t')
+                if temp_chr == record[0] and temp_pos == record[1]:
+                    control_flag = 1
 
-    if control_flag == 0:
-        print >> hout, '\t'.join(F[:8]) + '\t' + ','.join(temp_count)
+    if control_flag == 0 and temp_key != "":
+        print >> hout, temp_key + '\t' + ','.join(temp_count) 
+        # print >> hout, '\t'.join(F[:8]) + '\t' + ','.join(temp_count)
 
     hout.close()
  
@@ -863,6 +866,39 @@ def simple_link_effect_check(mutation_state, splicing_count, link, weight_vector
     return effect_size_vector 
 
 
+
+def simple_basic_effect_check(mutation_state, splicing_count, link, weight_vector):
+
+    def median(numbers):
+        return (sorted(numbers)[int(round((len(numbers) - 1) / 2.0))] + sorted(numbers)[int(round((len(numbers) - 1) // 2.0))]) / 2.0
+
+    mutation_states = mutation_state.split(';')
+    splicing_counts = splicing_count.split(';')
+    link_vector = link.split(';')
+
+    sample_num = len(splicing_counts[0].split(','))
+
+    # pass_links 
+    median_basic_effect_vector = [0] * len(link_vector)
+
+    # simple check for each link
+    for i in range(len(link_vector)):
+        mut_id, sp_id = link_vector[i].split(',')
+        splicing_cont_vector = splicing_counts[int(sp_id) - 1].split(',')
+
+        # extract samples with the mutation of the link in consideration
+        mut_vector = [0] * sample_num
+        for j in range(len(mutation_states)):
+            tmut_id, sample_id_str = mutation_states[j].split(':')
+            # if tmut_id == mut_id:
+            for sample_id in sample_id_str.split(','):
+                mut_vector[int(sample_id) - 1] = 1
+
+        median_basic_effect_vector[i] = median([int(splicing_cont_vector[j]) for j in range(sample_num) if mut_vector[j] == 0])
+
+    return median_basic_effect_vector
+
+
 def cluster_link(link):
 
     link_vector = link.split(';')
@@ -916,17 +952,15 @@ def convert_pruned_file(input_file, output_file, weight_vector, margin):
             link = F[3]
 
             effect_size_vector = simple_link_effect_check(mutation_state, splicing_count, link, weight_vector)
-            
-            # print F[0]
-            # print '\t'.join([str(x) for x in effect_size_vector])
- 
+            median_basic_effect_vector = simple_basic_effect_check(mutation_state, splicing_count, link, weight_vector)
+    
             link_vector = link.split(';')
 
             link2effect_size = {}
             for i in range(len(link_vector)):
                 link2effect_size[link_vector[i]] = effect_size_vector[i]
 
-            pass_link = [link_vector[i] for i in range(len(link_vector)) if effect_size_vector[i] >= margin]
+            pass_link = [link_vector[i] for i in range(len(link_vector)) if effect_size_vector[i] >= margin and median_basic_effect_vector[i] == 0]
 
             if len(pass_link) > 0:
                 clustered_sets = cluster_link(';'.join(pass_link))
