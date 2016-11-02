@@ -507,7 +507,7 @@ def merge_SJ_IR_files(SJ_input_file, IR_input_file, output_file):
         for line in hin:
             F = line.rstrip('\n').split('\t')
             genes = F[header2ind["Gene_1"]].split(';') + F[header2ind["Gene_2"]].split(';')
-            genes = list(set(genes))
+            genes = sorted(list(set(genes)))
 
             if "---" in genes: genes.remove("---")
             if len(genes) > 0:
@@ -818,6 +818,116 @@ def organize_mut_splicing_count(input_file, mut2sample_file, output_count_file, 
     hout1.close()
     hout2.close()
     hout3.close()
+
+
+def organize_mut_splicing_count2(input_file, mut2sample_file, output_count_file, output_link_file, sv_mode = False):
+
+    hout1 = open(output_count_file, 'w')
+    hout2 = open(output_link_file, 'w')
+
+    mut2sample = {}
+    if sv_mode == False:
+        with open(mut2sample_file, 'r') as hin:
+            for line in hin:
+                F = line.rstrip('\n').split('\t')
+                mut = '\t'.join(F[0:5])
+                mut2sample[mut] = F[5]
+    else:
+        with open(mut2sample_file, 'r') as hin:
+            for line in hin:
+                F = line.rstrip('\n').split('\t')
+                mut = ','.join(F[0:7])
+                mut2sample[mut] = F[7]
+
+
+    header2ind = {}
+    with open(input_file, 'r') as hin:
+
+        header = hin.readline().rstrip('\n').split('\t')
+        for i in range(len(header)):
+            header2ind[header[i]] = i
+
+        # print >> hout0, "Gene" + '\t' + '\t'.join(header)
+        temp_gene = ""
+        temp_mut2sample = []
+        temp_mut2id = {}
+        temp_splicing_count = []
+        temp_splicing2id = {}
+        temp_mut_splicing_link = []
+        temp_ids2link_info = {}
+        temp_mut_id = "0"
+        temp_splicing_id = "0"
+        for line in hin:
+
+            F = line.rstrip('\n').split('\t')
+
+            if F[header2ind["Gene_Symbol"]] != temp_gene:
+                if temp_gene != "":
+
+                    # flush the result
+                    print >> hout1, temp_gene + '\t' + ';'.join(temp_mut2sample) + '\t' + ';'.join(temp_splicing_count) + '\t' + ';'.join(temp_mut_splicing_link)
+
+                    # print temp_mut_id + '\t' + temp_splicing_id 
+                    # print temp_ids2link_info
+                    for mut_sp_ids in sorted(temp_ids2link_info):
+                        print >> hout2, temp_gene + '\t' + mut_sp_ids + '\t' + temp_ids2link_info[mut_sp_ids]
+    
+
+                temp_gene = F[header2ind["Gene_Symbol"]]
+                temp_mut2sample = []
+                temp_mut2id = {}
+                temp_splicing_count = []
+                temp_splicing2id = {}
+                temp_mut_splicing_link = []
+                temp_ids2link_info = {}
+                temp_mut_id = "0"
+                temp_splicing_id = "0"
+
+
+            mut = F[header2ind["Mutation_Key"]]
+            splicing_key = F[header2ind["Splicing_Key"]]
+            sample = get_mut_sample_info(F[header2ind["Mutation_Key"]], mut2sample)
+            # mut_info = F[header2ind["Motif_Pos"]] + ',' + F[header2ind["Mutation_Type"]] + ',' + F[header2ind["Is_Canonical"]]
+            link_info = '\t'.join(F[header2ind[x]] for x in \
+                                  ["Mutation_Key", "Motif_Pos", "Mutation_Type", "Is_Canonical", \
+                                   "Splicing_Key", "Splicing_Class", "Is_Inframe"])
+
+
+            if mut not in temp_mut2id:
+                 temp_mut_id = str(int(temp_mut_id) + 1)
+                 temp_mut2id[mut] = temp_mut_id
+                 temp_mut2sample.append(temp_mut_id + ':' + sample)
+
+            if splicing_key not in temp_splicing2id:
+                 temp_splicing_id = str(int(temp_splicing_id) + 1)
+                 temp_splicing2id[splicing_key] = temp_splicing_id
+                 temp_splicing_count.append(F[header2ind["Read_Counts"]])
+
+            # consider the case where one mutation is both disrupting and creating splicing motifs
+            if temp_mut2id[mut] + '\t' + temp_splicing2id[splicing_key] in temp_ids2link_info:
+                # disrupting annotations are preferentially added to link info
+                if F[header2ind["Mutation_Type"]] in ["splicing donor disruption", "splicing acceptor disruption"]:
+                    temp_ids2link_info[temp_mut2id[mut] + '\t' + temp_splicing2id[splicing_key]] = link_info
+            else:
+                temp_ids2link_info[temp_mut2id[mut] + '\t' + temp_splicing2id[splicing_key]] = link_info
+        
+
+            if temp_mut2id[mut] + ',' + temp_splicing2id[splicing_key] not in temp_mut_splicing_link:
+                temp_mut_splicing_link.append(temp_mut2id[mut] + ',' + temp_splicing2id[splicing_key])
+
+
+    # flush the result
+    print >> hout1, temp_gene + '\t' + ';'.join(temp_mut2sample) + '\t' + ';'.join(temp_splicing_count) + '\t' + ';'.join(temp_mut_splicing_link)
+
+    # print temp_mut_id + '\t' + temp_splicing_id 
+    # print temp_ids2link_info
+    for mut_sp_ids in sorted(temp_ids2link_info):
+        print >> hout2, temp_gene + '\t' + mut_sp_ids + '\t' + temp_ids2link_info[mut_sp_ids]
+
+
+    hout1.close()
+    hout2.close()
+
 
 
 def simple_link_effect_check(mutation_state, splicing_count, link, weight_vector, pseudo_count = 0.1):
@@ -1330,6 +1440,69 @@ def add_annotation(input_file, output_file, sample_name_list, mut_info_file, sp_
                                str(round(float(log_BF), 4))
 
     hout.close()
+
+
+def add_annotation2(input_file, output_file, sample_name_list, link_info_file):
+
+    id2sample = {}
+    temp_id = "1"
+    for sample_name in sample_name_list:
+        id2sample[temp_id] = sample_name
+        temp_id = str(int(temp_id) + 1)
+
+    mut_sp_id2link_info = {}
+    with open(link_info_file, 'r') as hin:
+        for line in hin:
+            F = line.rstrip('\n').split('\t')
+            mut_sp_id2link_info[F[0] + '\t' + F[1] + '\t' + F[2]] = '\t'.join(F[3:])
+
+
+    hout = open(output_file, 'w')
+
+    print >> hout, "Gene_Symbol" + '\t' + "Sample_Name" + '\t' + "Mutation_Key" + '\t' + "Motif_Pos" + '\t' + \
+                   "Mutation_Type" + '\t' + "Is_Canonical" + '\t' + "Splicing_Key" +'\t' + "Splicing_Class" + '\t' + \
+                   "Is_Inframe" + '\t' + "Score"
+
+    with open(input_file, 'r') as hin:
+        for line in hin:
+            F = line.rstrip('\n').split('\t')
+
+            gene = F[0]
+            mutation_states = F[1].split(';')
+            splicing_count_vector = F[2].split(';')
+            link_vector = F[3].split(';')
+            mut_id = F[4]
+            log_BF = F[5]
+            # log_ML0 = F[5]
+            conf_max_vector = F[6].split(',')
+
+            mut_id2sample_id = {}
+            for mut_state in mutation_states:
+                tmut_id, sample_ids = mut_state.split(':')
+                mut_id2sample_id[tmut_id] = sample_ids
+
+
+            active_link_vector = [link_vector[i] for i in range(len(link_vector)) if conf_max_vector[i] == "1"]
+
+            for active_link in active_link_vector:
+                tmut_id, tsp_id = active_link.split(',')
+                if tmut_id != mut_id: continue
+                current_splicing_counts = splicing_count_vector[int(tsp_id) - 1].split(',')
+
+
+                # get sample names
+                sample_names = []
+                for sample_id in mut_id2sample_id[mut_id].split(','):
+                    if int(current_splicing_counts[int(sample_id) - 1]) > 0:
+                        sample_names.append(id2sample[sample_id])
+
+                # get mutation info
+                link_info = mut_sp_id2link_info[gene + '\t' + mut_id + '\t' + tsp_id]
+
+                print >> hout, gene + '\t' + ';'.join(sample_names) + '\t' + link_info + '\t' + str(round(float(log_BF), 4))
+
+    hout.close()
+
 
 
 def permute_mut_SJ_pairs(input_file, output_file):

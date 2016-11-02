@@ -16,7 +16,6 @@ def main(args):
 
     if args.sv == False:
 
-
         utils.merge_mut(sconf.mut_files, args.output_prefix + ".mut_merged.txt")
         ##########
         # splicing_junction
@@ -38,24 +37,23 @@ def main(args):
         utils.merge_SJ_IR_files(args.output_prefix + ".SJ_merged.associate.txt", 
                                 args.output_prefix + ".IR_merged.associate.txt",
                                 args.output_prefix + ".splicing.associate.txt")
-        
-        utils.organize_mut_splicing_count(args.output_prefix + ".splicing.associate.txt",
+
+        utils.organize_mut_splicing_count2(args.output_prefix + ".splicing.associate.txt",
                                     args.output_prefix + ".mut_merged.txt",
                                     args.output_prefix + ".splicing_mutation.count_summary.txt",
-                                    args.output_prefix + ".splicing_mutation.mut_info.txt", 
-                                    args.output_prefix + ".splicing_mutation.splicing_info.txt")
-
+                                    args.output_prefix + ".splicing_mutation.link_info.txt")
+                                    # args.output_prefix + ".splicing_mutation.mut_info.txt", 
+                                    # args.output_prefix + ".splicing_mutation.splicing_info.txt")
     else:
 
         utils.merge_sv(sconf.sv_files, args.output_prefix + ".sv_merged.txt")
 
         ##########
         # splicing_junction
-        """
         utils.merge_SJ2(sconf.SJ_files, args.output_prefix + ".SJ_merged.txt", args.SJ_pooled_control_file, args.SJ_num_thres)
 
         subprocess.call(["junc_utils", "annotate", args.output_prefix + ".SJ_merged.txt", args.output_prefix + ".SJ_merged.annot.txt", args.resource_dir])
-        """
+
         subprocess.call(["junc_utils", "associate", args.output_prefix + ".SJ_merged.annot.txt", args.output_prefix + ".sv_merged.txt",
                          args.output_prefix + ".SJ_merged.associate.txt", args.resource_dir, "--sv"])
         ##########
@@ -98,11 +96,12 @@ def main(args):
                              args.output_prefix + ".splicing_mutation.count_summary.BIC.txt",
                              sconf.weights, args.log_BF_thres, args.alpha0, args.beta0, args.alpha1, args.beta1)
 
-    utils.add_annotation(args.output_prefix + ".splicing_mutation.count_summary.BIC.txt",
+    utils.add_annotation2(args.output_prefix + ".splicing_mutation.count_summary.BIC.txt",
                          args.output_prefix + ".splicing_mutation.count_summary.anno.txt",
                          sconf.sample_names,
-                         args.output_prefix + ".splicing_mutation.mut_info.txt",
-                         args.output_prefix + ".splicing_mutation.splicing_info.txt", args.sv)
+                         args.output_prefix + ".splicing_mutation.link_info.txt")
+                         # args.output_prefix + ".splicing_mutation.mut_info.txt",
+                         # args.output_prefix + ".splicing_mutation.splicing_info.txt", args.sv)
    
     # permutation
     for i in range(args.permutation_num):
@@ -120,12 +119,17 @@ def main(args):
                                  args.output_prefix + ".splicing_mutation.count_summary.BIC.perm" + str(i) + ".txt",
                                  sconf.weights, args.log_BF_thres, args.alpha0, args.beta0, args.alpha1, args.beta1)
 
-        
+        utils.add_annotation2(args.output_prefix + ".splicing_mutation.count_summary.BIC.perm" + str(i) + ".txt",
+                              args.output_prefix + ".splicing_mutation.count_summary.anno.perm" + str(i) + ".txt",
+                              sconf.sample_names,
+                              args.output_prefix + ".splicing_mutation.link_info.txt")
+        """
         utils.add_annotation(args.output_prefix + ".splicing_mutation.count_summary.BIC.perm" + str(i) + ".txt",
                              args.output_prefix + ".splicing_mutation.count_summary.anno.perm" + str(i) + ".txt",
                              sconf.sample_names,
                              args.output_prefix + ".splicing_mutation.mut_info.txt",
                              args.output_prefix + ".splicing_mutation.splicing_info.txt", args.sv)
+        """
 
     utils.calculate_q_value(args.output_prefix + ".splicing_mutation.count_summary.anno.txt",
                             args.output_prefix + ".splicing_mutation.count_summary.anno.perm",
