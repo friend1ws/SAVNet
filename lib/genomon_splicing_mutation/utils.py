@@ -514,6 +514,10 @@ def merge_SJ_IR_files(SJ_input_file, IR_input_file, output_file):
                 genes_nm = filter(lambda x: x.find("(NM_") > 0, genes)
                 if len(genes_nm) > 0: genes = genes_nm
 
+            if len(genes) > 0:
+                genes_single = filter(lambda x: x.find("-") > 0, genes)
+                if len(genes_single) > 0: genes = genes_single
+ 
             gene = genes[0]
             gene = re.sub(r"\(N[MR]_\d+\)", "", gene)
 
