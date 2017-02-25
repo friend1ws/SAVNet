@@ -1,8 +1,20 @@
 #! /usr/bin/env python
 
-import sys, glob, subprocess, re, math, copy, random, pysam
+import sys, glob, gzip, subprocess, re, math, copy, random, pysam
+
+import time
 
 def merge_SJ2(SJ_file_list, output_file, control_file, junc_num_thres, is_keep_annotated):
+
+    # get junctions registered in control
+    control_db = {}
+    if control_file is not None:
+        with gzip.open(control_file, 'r') as hin:
+            for line in hin:
+                F = line.rstrip('\n').split('\t')
+                key = F[0] + '\t' + F[1] + '\t' + F[2]
+                control_db[key] = 1
+
 
     # list up junctions to pick up
     junc2list = {}
@@ -12,9 +24,11 @@ def merge_SJ2(SJ_file_list, output_file, control_file, junc_num_thres, is_keep_a
                 F = line.rstrip('\n').split('\t')
                 if is_keep_annotated == False and F[5] != "0": continue
                 if int(F[6]) < junc_num_thres: continue
-                key = F[0] + '\t' + F[1] + '\t' + F[2]
-                if key not in junc2list: junc2list[key] = 1
 
+                key = F[0] + '\t' + F[1] + '\t' + F[2]
+                if key in control_db: continue
+                if key not in junc2list: junc2list[key] = 1
+                
 
     temp_id = 0
     hout = open(output_file + ".tmp.unsorted.txt", 'w')
@@ -35,8 +49,8 @@ def merge_SJ2(SJ_file_list, output_file, control_file, junc_num_thres, is_keep_a
     hout.close()
 
 
-    if control_file is not None:
-        control_db = pysam.TabixFile(control_file)
+    # if control_file is not None:
+    #     control_db = pysam.TabixFile(control_file)
 
     temp_chr = ""
     temp_start = ""
@@ -52,6 +66,7 @@ def merge_SJ2(SJ_file_list, output_file, control_file, junc_num_thres, is_keep_a
                 # if not the first line 
                 if temp_chr != "":
 
+                    """
                     # skip if the junction is included in the control file
                     control_flag = 0
                     if control_file is not None:
@@ -71,6 +86,8 @@ def merge_SJ2(SJ_file_list, output_file, control_file, junc_num_thres, is_keep_a
 
                     if control_flag == 0:
                         print >> hout, temp_chr + '\t' + temp_start + '\t' + temp_end + '\t' + ','.join(temp_count)
+                    """
+                    print >> hout, temp_chr + '\t' + temp_start + '\t' + temp_end + '\t' + ','.join(temp_count)
 
                 temp_chr = F[0]
                 temp_start = F[1]
@@ -82,6 +99,7 @@ def merge_SJ2(SJ_file_list, output_file, control_file, junc_num_thres, is_keep_a
 
     # last check 
 
+    """
     # skip if the junction is included in the control file
     control_flag = 0
     if control_file is not None:
@@ -101,6 +119,8 @@ def merge_SJ2(SJ_file_list, output_file, control_file, junc_num_thres, is_keep_a
                 
     if control_flag == 0:
         print >> hout, temp_chr + '\t' + temp_start + '\t' + temp_end + '\t' + ','.join(temp_count)
+    """
+    print >> hout, temp_chr + '\t' + temp_start + '\t' + temp_end + '\t' + ','.join(temp_count)
 
     hout.close()
  
@@ -108,8 +128,8 @@ def merge_SJ2(SJ_file_list, output_file, control_file, junc_num_thres, is_keep_a
     subprocess.call(["rm", "-rf", output_file + ".tmp.unsorted.txt"])
     subprocess.call(["rm", "-rf", output_file + ".tmp.sorted.txt"])
 
-    if control_file is not None:
-        control_db.close()
+    # if control_file is not None:
+    #     control_db.close()
 
 
 def merge_SJ(SJ_list_file, output_file, control_file, junc_num_thres):
@@ -191,6 +211,15 @@ def merge_SJ(SJ_list_file, output_file, control_file, junc_num_thres):
 
 def merge_intron_retention(IR_file_list, output_file, control_file, ratio_thres, num_thres):
 
+    # get control intron retention info
+    control_db = {}
+    if control_file is not None:
+        with gzip.open(control_file, 'r') as hin:
+            for line in hin:
+                F = line.rstrip('\n').split('\t')
+                control_db[F[0] + '\t' + F[1]] = 1
+
+
     # list up junctions to pick up
     intron_retention2list = {}
     header2ind = {}
@@ -210,6 +239,9 @@ def merge_intron_retention(IR_file_list, output_file, control_file, ratio_thres,
                 if F[header2ind["Edge_Read_Count"]] != "0":
                     ratio = float(F[header2ind["Intron_Retention_Read_Count"]]) / float(F[header2ind["Edge_Read_Count"]])
                 if ratio < ratio_thres: continue
+
+                # check the existence in control
+                if F[0] + '\t' + F[1] in control_db: continue
 
                 key = '\t'.join([F[header2ind[x]] for x in target_header])
 
@@ -237,8 +269,8 @@ def merge_intron_retention(IR_file_list, output_file, control_file, ratio_thres,
     subprocess.call(["sort", "-k1,1", "-k2,2n", output_file + ".tmp.unsorted.txt"], stdout = hout)
     hout.close()
 
-    if control_file is not None:
-        control_db = pysam.TabixFile(control_file)
+    # if control_file is not None:
+    #     control_db = pysam.TabixFile(control_file)
 
     temp_chr = ""
     temp_pos = ""
@@ -256,6 +288,7 @@ def merge_intron_retention(IR_file_list, output_file, control_file, ratio_thres,
                 # if not the first line 
                 if temp_chr != "":
 
+                    """
                     # skip if the junction is included in the control file
                     tabixErrorFlag = 0
                     if control_file is not None:
@@ -275,6 +308,8 @@ def merge_intron_retention(IR_file_list, output_file, control_file, ratio_thres,
 
                     if control_flag == 0:
                         print >> hout, temp_key + '\t' + ','.join(temp_count)
+                    """
+                    print >> hout, temp_key + '\t' + ','.join(temp_count)
 
                 temp_chr = F[0]
                 temp_pos = F[1]
@@ -283,8 +318,9 @@ def merge_intron_retention(IR_file_list, output_file, control_file, ratio_thres,
 
             temp_count[int(F[8])] = F[9]
 
-
+    
     # last check 
+    """
     # skip if the junction is included in the control file
     control_flag = 0
     if control_file is not None:
@@ -305,6 +341,9 @@ def merge_intron_retention(IR_file_list, output_file, control_file, ratio_thres,
     if control_flag == 0 and temp_key != "":
         print >> hout, temp_key + '\t' + ','.join(temp_count) 
         # print >> hout, '\t'.join(F[:8]) + '\t' + ','.join(temp_count)
+    """
+    if temp_key != "":
+        print >> hout, temp_key + '\t' + ','.join(temp_count) 
 
     hout.close()
  
@@ -312,8 +351,8 @@ def merge_intron_retention(IR_file_list, output_file, control_file, ratio_thres,
     subprocess.call(["rm", "-rf", output_file + ".tmp.unsorted.txt"])
     subprocess.call(["rm", "-rf", output_file + ".tmp.sorted.txt"])
 
-    if control_file is not None:
-        control_db.close()
+    # if control_file is not None:
+    #     control_db.close()
 
 
 def merge_chimera(chimera_file_list, output_file, control_file, num_thres, overhang_thres):
@@ -515,7 +554,7 @@ def merge_SJ_IR_files(SJ_input_file, IR_input_file, output_file):
                 if len(genes_nm) > 0: genes = genes_nm
 
             if len(genes) > 0:
-                genes_single = filter(lambda x: x.find("-") > 0, genes)
+                genes_single = filter(lambda x: x.find("-") == -1, genes)
                 if len(genes_single) > 0: genes = genes_single
  
             gene = genes[0]
@@ -1065,6 +1104,22 @@ def convert_pruned_file(input_file, output_file, weight_vector, margin):
             splicing_count = F[2]
             link = F[3]
 
+            if len(splicing_count.split(';')) > 1000:
+                print >> sys.stderr, "skip " + gene + ", because too many splicing patterns"
+                continue
+
+            # print gene + '\t' + str(len(mutation_state.split(';'))) + '\t' + str(len(splicing_count.split(';'))) + '\t' + link
+            # stime = time.time()
+
+            ##########
+            # used for late filtering of multiple mutations observed in one sample
+            mutation_states = mutation_state.split(';')
+            mut_id2sample_list = {}
+            for j in range(len(mutation_states)):
+                tmut_id, sample_id_str = mutation_states[j].split(':')
+                mut_id2sample_list[tmut_id] = sample_id_str.split(',')
+            ##########
+
             effect_size_vector = simple_link_effect_check(mutation_state, splicing_count, link, weight_vector)
             median_basic_effect_vector = simple_basic_effect_check(mutation_state, splicing_count, link, weight_vector)
     
@@ -1081,17 +1136,44 @@ def convert_pruned_file(input_file, output_file, weight_vector, margin):
                 for sub_cluster in sorted(clustered_sets):
                     sub_cluster_link = sub_cluster.split(';')
                     # maximum number is 10
-   
+ 
+                    # remove duplicated links
+                    nondup_links = [] 
+                    nondup_mut_ids = []
+                    dup_mut_ids = []
+                    appeared_sample_list = []
+
+                    for i in range(len(sub_cluster_link)):
+                        tmut_id, tsp_id = sub_cluster_link[i].split(',')
+                        sample_ids = mut_id2sample_list[tmut_id]
+
+                        if tmut_id in nondup_mut_ids:
+                            nondup_links.append(sub_cluster_link[i])
+                        elif tmut_id in dup_mut_ids:
+                            continue
+                        else:
+                            first_samples = []
+                            for sample_id in sample_ids:
+                                if sample_id not in appeared_sample_list:
+                                    first_samples.append(sample_id)
+                            if len(first_samples) > 0:
+                                nondup_links.append(sub_cluster_link[i])
+                                nondup_mut_ids.append(tmut_id)
+                            else:
+                                dup_mut_ids.append(tmut_id)
+
+                    sub_cluster_link = nondup_links
+
                     """     
                     if gene.startswith("COL"): 
                         print '\t'.join(F)
                         print sub_cluster_link
                     """
 
-                    if len(sub_cluster_link) > 10:
+                    if len(sub_cluster_link) > 15:
 
                         sub_cluster_effect_size_vector = [link2effect_size[x] for x in sub_cluster_link]
-                        temp_margin = sorted(sub_cluster_effect_size_vector, reverse=True)[10]
+                        temp_margin = sorted(sub_cluster_effect_size_vector, reverse=True)[15]
                         sub_cluster_link = [sub_cluster_link[i] for i in range(len(sub_cluster_link)) if sub_cluster_effect_size_vector[i] > temp_margin]
 
                         """
@@ -1105,6 +1187,9 @@ def convert_pruned_file(input_file, output_file, weight_vector, margin):
                     # may be removed at the above filtering step
                     if len(sub_cluster_link) > 0:
                         print >> hout, gene + '\t' + mutation_state + '\t' + splicing_count + '\t' + ';'.join(sub_cluster_link)
+
+            # print gene + '\t' + str(len(mutation_state.split(';'))) + '\t' + str(len(splicing_count.split(';'))) + '\t' + str(len(link.split(';'))) + '\t' + str(time.time() - stime)
+
 
     hout.close()
 
@@ -1176,8 +1261,17 @@ def get_log_marginal_likelihood(mutation_state, splicing_count, configuration_ve
 
     sample_num = len(splicing_counts[0].split(','))
 
+    active_sp_list = []
+    # get mutations associated with the current splicing
+    for e in range(len(link_vector)):
+        mut_id, sp_id = link_vector[e].split(',')
+        active_sp_list.append(int(sp_id))
+
+
     log_marginal_likelihood = 0
     for i in range(len(splicing_counts)):
+
+        if i + 1 not in active_sp_list: continue
 
         splicing_cont_vector = splicing_counts[i].split(',')
         active_mut_list = []
@@ -1247,6 +1341,20 @@ def check_significance(input_file, output_file, weight_vector, log_BF_thres, alp
             splicing_count = F[2]
             link = F[3]
 
+            # print gene + '\t' + str(len(mutation_state.split(';'))) + '\t' + str(len(splicing_count.split(';'))) + '\t' + link
+            # start_time = time.time()
+        
+            """
+            print ""
+            print mutation_state
+            print ""
+            print len(mutation_state.split(';'))
+            print ""
+            print len(splicing_count.split(';'))
+            print ""
+            print link
+            """
+
             conf_dim = len(link.split(';'))
 
             # log_MLs_nonnull = []
@@ -1271,7 +1379,7 @@ def check_significance(input_file, output_file, weight_vector, log_BF_thres, alp
                 mut2log_ML_nonnull_max[mut_id] = float("-inf") 
                 mut2conf_max[mut_id] = [0] * conf_dim
                 mut2log_BF[mut_id] = float("-inf")
- 
+
             for conf in sorted(generate_configurations(conf_dim)):
 
                 # get active mutation in the configuration in consideration
@@ -1284,9 +1392,10 @@ def check_significance(input_file, output_file, weight_vector, log_BF_thres, alp
 
 
                 conf_num = conf_num + 1
+    
                 log_ML = get_log_marginal_likelihood(mutation_state, splicing_count, conf, link,
                                                      weight_vector, alpha0, beta0, alpha1, beta1)
-
+    
                 for mut_id in mut2log_ML_null:
                     if mut_id in active_mut_list:
                         mut2log_ML_nonnull[mut_id].append(log_ML)
@@ -1307,11 +1416,9 @@ def check_significance(input_file, output_file, weight_vector, log_BF_thres, alp
                     conf_max = conf
                 """
 
-                """
-                if gene == "DDX17":
+                if gene == "MET":
                     print conf
                     print log_ML
-                """
 
             # log_BF_sum = soft_max(log_MLs_nonnull) - math.log(float(conf_num - 1)) - log_ML_null
 
@@ -1327,6 +1434,9 @@ def check_significance(input_file, output_file, weight_vector, log_BF_thres, alp
             # if log_BF_sum > log_BF_thres:
                 print >> hout, '\t'.join(F) + '\t' + mut_id + '\t' + str(round(mut2log_BF[mut_id], 4)) + '\t' + ','.join([str(x) for x in mut2conf_max[mut_id]])
                 # print >> hout, '\t'.join(F) + '\t' + str(log_BF_sum) + '\t' + ','.join([str(x) for x in conf_max]) 
+
+            # elapsed_time = time.time() - start_time
+            # print elapsed_time
 
             """
             # BIC based approach, deprecated 
@@ -1465,7 +1575,7 @@ def add_annotation2(input_file, output_file, sample_name_list, link_info_file):
 
     print >> hout, "Gene_Symbol" + '\t' + "Sample_Name" + '\t' + "Mutation_Key" + '\t' + "Motif_Pos" + '\t' + \
                    "Mutation_Type" + '\t' + "Is_Canonical" + '\t' + "Splicing_Key" +'\t' + "Splicing_Class" + '\t' + \
-                   "Is_Inframe" + '\t' + "Score"
+                   "Is_Inframe" + '\t' + "Supporting_Read_Num" + '\t' + "Score"
 
     with open(input_file, 'r') as hin:
         for line in hin:
@@ -1496,14 +1606,17 @@ def add_annotation2(input_file, output_file, sample_name_list, link_info_file):
 
                 # get sample names
                 sample_names = []
+                splicing_counts = []
                 for sample_id in mut_id2sample_id[mut_id].split(','):
                     if int(current_splicing_counts[int(sample_id) - 1]) > 0:
                         sample_names.append(id2sample[sample_id])
+                        splicing_counts.append(current_splicing_counts[int(sample_id) - 1])
 
                 # get mutation info
                 link_info = mut_sp_id2link_info[gene + '\t' + mut_id + '\t' + tsp_id]
 
-                print >> hout, gene + '\t' + ';'.join(sample_names) + '\t' + link_info + '\t' + str(round(float(log_BF), 4))
+                print >> hout, gene + '\t' + ';'.join(sample_names) + '\t' + link_info + '\t' + \
+                                ';'.join(splicing_counts) + '\t' + str(round(float(log_BF), 4))
 
     hout.close()
 
@@ -1546,8 +1659,26 @@ def permute_mut_SJ_pairs(input_file, output_file):
     hout.close()
 
 
-def calculate_q_value(input_file, permutation_file_prefix, output_file, permutation_num, sv_mode = False):
+def merge_perm_result(permutation_file_prefix, output_file, permutation_num):
 
+    hout = open(output_file, 'w')
+    header_print_ind = False 
+    for i in range(permutation_num):
+        mut2logBF = {}
+        with open(permutation_file_prefix + str(i) + ".txt", 'r') as hin:
+            header = hin.readline().rstrip('\n').split('\t')
+            if not header_print_ind:
+                print >> hout, "Permutation_Num" + '\t' + '\t'.join(header)
+                header_print_ind = True
+            for line in hin:
+                print >> hout, str(i) + '\t' + line.rstrip('\n')
+
+    hout.close()
+
+def calculate_q_value(input_file, permutation_merged_file, output_file, permutation_num, sv_mode = False):
+# def calculate_q_value(input_file, permutation_file_prefix, output_file, permutation_num, sv_mode = False):
+
+    """
     logBF_values_null = []
     header2ind = {}
     for i in range(permutation_num):
@@ -1564,12 +1695,29 @@ def calculate_q_value(input_file, permutation_file_prefix, output_file, permutat
                     mut2logBF[F[header2ind["SV_Key"]]] = float(F[header2ind["Score"]])
 
         logBF_values_null = logBF_values_null + mut2logBF.values()
+    """
+
+    logBF_values_null = []
+    header2ind = {}
+    mut2logBF = {}
+    with open(permutation_merged_file, 'r') as hin:
+        header = hin.readline().rstrip('\n').split('\t')
+        for (i, cname) in enumerate(header):
+            header2ind[cname] = i
+        for line in hin:
+            F = line.rstrip('\n').split('\t')
+            if sv_mode == False:
+                mut2logBF[F[header2ind["Permutation_Num"]] + '\t' + F[header2ind["Mutation_Key"]]] = float(F[header2ind["Score"]])
+            else:
+                mut2logBF[F[header2ind["Permutation_Num"]] + '\t' + F[header2ind["SV_Key"]]] = float(F[header2ind["Score"]])
+        logBF_values_null = logBF_values_null + mut2logBF.values()
+
 
     # count total mutation num
     mut2logBF = {}
     with open(input_file, 'r') as hin:
         header = hin.readline().rstrip('\n').split('\t')
-        for (i, cnname) in enumerate(header):
+        for (i, cname) in enumerate(header):
             header2ind[cname] = i
         for line in hin:
             F = line.rstrip('\n').split('\t')
@@ -1582,9 +1730,10 @@ def calculate_q_value(input_file, permutation_file_prefix, output_file, permutat
 
     # obtain q-value for each logBF
     logBF2FPR = {}
+    header2ind = {}
     with open(input_file, 'r') as hin:
         header = hin.readline().rstrip('\n').split('\t')
-        for (i, cnname) in enumerate(header):
+        for (i, cname) in enumerate(header):
             header2ind[cname] = i
         for line in hin:
             F = line.rstrip('\n').split('\t')
@@ -1593,6 +1742,7 @@ def calculate_q_value(input_file, permutation_file_prefix, output_file, permutat
  
             pFPR = null_num_est / nonnull_num if nonnull_num > 0.0 else 0.0
             logBF2FPR[F[header2ind["Score"]]] = pFPR
+
 
     logBF2qvalue = {}
     temp_min_FPR = float("inf")
@@ -1611,7 +1761,7 @@ def calculate_q_value(input_file, permutation_file_prefix, output_file, permutat
     header2ind = {}
     with open(input_file, 'r') as hin:
         header = hin.readline().rstrip('\n').split('\t')
-        for (i, cnname) in enumerate(header):
+        for (i, cname) in enumerate(header):
             header2ind[cname] = i
         # print >> hout, '\t'.join(header) + '\t' + "Q_Value" + '\t' + "pFPR"
         print >> hout, '\t'.join(header) + '\t' + "Q_Value"

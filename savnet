@@ -17,14 +17,29 @@ parser.add_argument("sample_list_file", metavar = "sample_list.txt", default = N
 parser.add_argument("output_prefix", metavar = "output_prefix", default = None, type = str, 
                     help = "the prefix of the output")
 
-parser.add_argument("resource_dir", metavar = "resource_dir", default = None, type = str,
-                    help = "the path to resource directory for junc_utils")
+# parser.add_argument("resource_dir", metavar = "resource_dir", default = None, type = str,
+#                     help = "the path to resource directory for junc_utils")
+
+parser.add_argument("--grc", default = False, action = 'store_true',
+                    help = "convert chromosome names to Genome Reference Consortium nomenclature (default: %(default)s)")
+
+parser.add_argument("--genome_id", choices = ["hg19", "hg38", "mm10"], default = "hg19",
+                    help = "the genome id used for selecting UCSC-GRC chromosome name corresponding files (default: %(default)s)")
 
 parser.add_argument("reference_genome", metavar = "reference.fa", default = None, type = str,
                     help = "the path to the reference genome sequence")
 
 parser.add_argument("--sv", action='store_true',
                     help = "analysis structural variation file")
+
+parser.add_argument("--branchpoint", action='store_true',
+                    help = "include branchpoint to the analysis")
+
+parser.add_argument("--donor_size", metavar = "donor_size", default = "2,8", type = str,
+                    help = "splicing donor site size (exonic region size, intronic region size) (default: %(default)s)")
+
+parser.add_argument("--acceptor_size", metavar = "acceptor_size", default = "8,2", type = str,
+                    help = "splicing donor site size (intronic region size, exonic region size) (default: %(default)s)")
 
 parser.add_argument("--SJ_pooled_control_file", default = None, type = str,
                     help = "the path to control data created by junc_utils merge_control (default: %(default)s)")

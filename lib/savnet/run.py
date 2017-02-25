@@ -17,23 +17,35 @@ def main(args):
     if args.sv == False:
 
         utils.merge_mut(sconf.mut_files, args.output_prefix + ".mut_merged.txt")
+
         ##########
         # splicing_junction
         utils.merge_SJ2(sconf.SJ_files, args.output_prefix + ".SJ_merged.txt", args.SJ_pooled_control_file, args.SJ_num_thres, args.keep_annotated)
 
-        subprocess.call(["junc_utils", "annotate", args.output_prefix + ".SJ_merged.txt", args.output_prefix + ".SJ_merged.annot.txt", args.resource_dir])
+        annotate_commands = ["junc_utils", "annotate", args.output_prefix + ".SJ_merged.txt", args.output_prefix + ".SJ_merged.annot.txt",
+                             "--genome_id", args.genome_id]
+        if args.grc: annotate_commands.append("--grc")
+        subprocess.call(annotate_commands)
 
-        subprocess.call(["junc_utils", "associate", args.output_prefix + ".SJ_merged.annot.txt", args.output_prefix + ".mut_merged.txt", 
-                         args.output_prefix + ".SJ_merged.associate.txt", args.resource_dir, "--reference_genome", args.reference_genome,
-                         "--mutation_format", "anno"])
+        associate_commands = ["junc_utils", "associate", args.output_prefix + ".SJ_merged.annot.txt", args.output_prefix + ".mut_merged.txt",
+                              args.output_prefix + ".SJ_merged.associate.txt", "--reference_genome", args.reference_genome,
+                              "--mutation_format", "anno", "--donor_size", args.donor_size, "--acceptor_size", args.acceptor_size,
+                              "--genome_id", args.genome_id]
+        if args.branchpoint: associate_commands.append("--branchpoint")
+        if args.grc: associate_commands.append("--grc")
+        subprocess.call(associate_commands)
+        
         ##########
         # intron_retention
         utils.merge_intron_retention(sconf.IR_files, args.output_prefix + ".IR_merged.txt", 
                                      args.IR_pooled_control_file, args.IR_ratio_thres, args.IR_num_thres)
+
         subprocess.call(["intron_retention_utils", "associate", args.output_prefix + ".IR_merged.txt", 
                          args.output_prefix + ".mut_merged.txt", args.output_prefix + ".IR_merged.associate.txt",
-                         "--reference_genome", args.reference_genome, "--mutation", "anno"])
+                         "--reference_genome", args.reference_genome, "--mutation", "anno",
+                         "--donor_size", args.donor_size, "--acceptor_size", args.acceptor_size])
         #########
+
         utils.merge_SJ_IR_files(args.output_prefix + ".SJ_merged.associate.txt", 
                                 args.output_prefix + ".IR_merged.associate.txt",
                                 args.output_prefix + ".splicing.associate.txt")
@@ -44,6 +56,7 @@ def main(args):
                                     args.output_prefix + ".splicing_mutation.link_info.txt")
                                     # args.output_prefix + ".splicing_mutation.mut_info.txt", 
                                     # args.output_prefix + ".splicing_mutation.splicing_info.txt")
+ 
     else:
 
         utils.merge_sv(sconf.sv_files, args.output_prefix + ".sv_merged.txt")
@@ -72,7 +85,7 @@ def main(args):
         subprocess.call(["chimera_utils", "associate", "--is_grc", args.output_prefix + ".chimera_merged.txt",
                          args.output_prefix + ".sv_merged.txt", args.output_prefix + ".chimera_merged.associate.txt"])
         ##########
-
+       
         utils.merge_SJ_IR_chimera_files_sv(args.output_prefix + ".SJ_merged.associate.txt",
                                            args.output_prefix + ".IR_merged.associate.txt",
                                            args.output_prefix + ".chimera_merged.associate.txt",
@@ -83,7 +96,6 @@ def main(args):
                                     args.output_prefix + ".splicing_mutation.count_summary.txt",
                                     args.output_prefix + ".splicing_mutation.mut_info.txt",
                                     args.output_prefix + ".splicing_mutation.splicing_info.txt", True)
-
 
     # true combination    
     print >> sys.stderr, "evaluating true combinations"
@@ -102,19 +114,20 @@ def main(args):
                          args.output_prefix + ".splicing_mutation.link_info.txt")
                          # args.output_prefix + ".splicing_mutation.mut_info.txt",
                          # args.output_prefix + ".splicing_mutation.splicing_info.txt", args.sv)
-   
+
+
     # permutation
     for i in range(args.permutation_num):
+    # for i in range(93, 100):
 
         print >> sys.stderr, "evaluating permutation " + str(i)
-    
         utils.permute_mut_SJ_pairs(args.output_prefix + ".splicing_mutation.count_summary.txt",
                              args.output_prefix + ".splicing_mutation.count_summary.perm" + str(i) + ".txt")
-    
+   
         utils.convert_pruned_file(args.output_prefix + ".splicing_mutation.count_summary.perm" + str(i) + ".txt",
                                   args.output_prefix + ".splicing_mutation.count_summary.pruned.perm" + str(i) + ".txt",
                                   sconf.weights, args.effect_size_thres)
-        
+
         utils.check_significance(args.output_prefix + ".splicing_mutation.count_summary.pruned.perm" + str(i) + ".txt",
                                  args.output_prefix + ".splicing_mutation.count_summary.BIC.perm" + str(i) + ".txt",
                                  sconf.weights, args.log_BF_thres, args.alpha0, args.beta0, args.alpha1, args.beta1)
@@ -123,17 +136,22 @@ def main(args):
                               args.output_prefix + ".splicing_mutation.count_summary.anno.perm" + str(i) + ".txt",
                               sconf.sample_names,
                               args.output_prefix + ".splicing_mutation.link_info.txt")
-        """
-        utils.add_annotation(args.output_prefix + ".splicing_mutation.count_summary.BIC.perm" + str(i) + ".txt",
-                             args.output_prefix + ".splicing_mutation.count_summary.anno.perm" + str(i) + ".txt",
-                             sconf.sample_names,
-                             args.output_prefix + ".splicing_mutation.mut_info.txt",
-                             args.output_prefix + ".splicing_mutation.splicing_info.txt", args.sv)
-        """
+
+        # utils.add_annotation(args.output_prefix + ".splicing_mutation.count_summary.BIC.perm" + str(i) + ".txt",
+        #                      args.output_prefix + ".splicing_mutation.count_summary.anno.perm" + str(i) + ".txt",
+        #                      sconf.sample_names,
+        #                      args.output_prefix + ".splicing_mutation.mut_info.txt",
+        #                      args.output_prefix + ".splicing_mutation.splicing_info.txt", args.sv)
+
+
+    utils.merge_perm_result(args.output_prefix + ".splicing_mutation.count_summary.anno.perm", 
+                            args.output_prefix + ".splicing_mutation.count_summary.anno.perm_all.txt",
+                            args.permutation_num)
 
     utils.calculate_q_value(args.output_prefix + ".splicing_mutation.count_summary.anno.txt",
-                            args.output_prefix + ".splicing_mutation.count_summary.anno.perm",
-                            args.output_prefix + ".genomon_splicing_mutation.result.txt",
+                            # args.output_prefix + ".splicing_mutation.count_summary.anno.perm",
+                            args.output_prefix + ".splicing_mutation.count_summary.anno.perm_all.txt",
+                            args.output_prefix + ".savnet.result.txt",
                             args.permutation_num, args.sv)
 
     if args.debug == False:
@@ -151,5 +169,4 @@ def main(args):
             subprocess.call(["rm", "-rf", args.output_prefix + ".splicing_mutation.count_summary.pruned.perm" + str(i) + ".txt"])
             subprocess.call(["rm", "-rf", args.output_prefix + ".splicing_mutation.count_summary.BIC.perm" + str(i) + ".txt"])
             subprocess.call(["rm", "-rf", args.output_prefix + ".splicing_mutation.count_summary.anno.perm" + str(i) + ".txt"])
-
 
