@@ -2,7 +2,7 @@
 
 ## Introduction
 
- software for extracting splicing associated variants from somatic mutation, splicing junction and intron retention data.
+ software for extracting splicing associated variants (SAVs) from somatic mutation, splicing junction and intron retention data.
 
 ## Dependency
 
@@ -22,6 +22,32 @@ git clone  https://github.com/friend1ws/SAVNet.git
 cd SAVNet
 python setup.py build install
 ```
+
+
+## Input files
+
+### How to prepare sample config file
+
+The sample config file should be tab-delimited and start with headers.
+Currently, there are 5 columns, *Sample_Name*, *Mutation_File*, *SJ_File*, *IR_File* and *Weight*.
+*Sample_Name* and *Mutation_File* is required column.
+Either *SJ_File* or *IR_File* need to be specified.
+*Weight* is optional.
+
+#### Sample_Name
+
+The field for sample names. This is used for the output file to show which samples have the identified SAVs.
+
+#### Mutation_File
+
+The pathes to mutation call data. Currently, SAVNet accepts only [Annovar input file](http://annovar.openbioinformatics.org/en/latest/user-guide/input/) format.
+Only the first five columns (Chr, Start, End, Ref, Alt) are used, and others are ignored.
+Lines starting with # are skipped.
+We will soon update the sotfware so that it can accept the vcf format.
+
+
+Currently, there are *Sample_Name*, *Mutation_File*, *SJ_File*, *IR_File*, *Weight*
+In the `sample_list.txt` file, 
 
 ## Commands
 
