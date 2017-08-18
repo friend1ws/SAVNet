@@ -2,7 +2,7 @@
 
 ## Introduction
 
- softtware for extracting splicing associated variants (SAVs) from somatic mutation, splicing junction and intron retention data.
+ software for extracting splicing associated variants (SAVs) from somatic mutation, splicing junction and intron retention data.
 
 ## Dependency
 
