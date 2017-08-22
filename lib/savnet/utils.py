@@ -951,6 +951,14 @@ def organize_mut_splicing_count2(input_file, mut2sample_file, output_count_file,
                 # disrupting annotations are preferentially added to link info
                 if F[header2ind["Mutation_Type"]] in ["splicing donor disruption", "splicing acceptor disruption"]:
                     temp_ids2link_info[temp_mut2id[mut] + '\t' + temp_splicing2id[splicing_key]] = link_info
+                elif F[header2ind["Mutation_Type"]] in ["splicing donor creation", "splicing acceptor creation"] and \
+                    "splicing branchpoint disruption" in temp_ids2link_info[temp_mut2id[mut] + '\t' + temp_splicing2id[splicing_key]]:
+                    temp_ids2link_info[temp_mut2id[mut] + '\t' + temp_splicing2id[splicing_key]] = link_info
+                # prefer canonical splicing branchpoint disruption rather than non-canonical splicing branchpoint disruption
+                elif F[header2ind["Mutation_Type"]] == "splicing branchpoint disruption" and \
+                    "splicing branchpoint disruption" in temp_ids2link_info[temp_mut2id[mut] + '\t' + temp_splicing2id[splicing_key]] and \
+                    F[header2ind["Is_Canonical"]] == "canonical":
+                    temp_ids2link_info[temp_mut2id[mut] + '\t' + temp_splicing2id[splicing_key]] = link_info
             else:
                 temp_ids2link_info[temp_mut2id[mut] + '\t' + temp_splicing2id[splicing_key]] = link_info
         

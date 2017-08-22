@@ -34,7 +34,7 @@ def main(args):
         if args.branchpoint: associate_commands.append("--branchpoint")
         if args.grc: associate_commands.append("--grc")
         subprocess.call(associate_commands)
-        
+
         ##########
         # intron_retention
         utils.merge_intron_retention(sconf.IR_files, args.output_prefix + ".IR_merged.txt", 
