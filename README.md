@@ -6,8 +6,6 @@
 
 ## Dependency
 
-## Dependency
-
 ### Python
 
 Python (>= 2.7), `pysam (>= 0.8.1)`, [`junc_utils`](https://github.com/friend1ws/junc_utils), [`intron retention_utils`](https://github.com/friend1ws/intron_retention_utils) packages.
@@ -45,7 +43,7 @@ The field for sample names. This is used for the output file to show which sampl
 
 The pathes to mutation calling data for each sample (on hg19, hg38 or mm10 reference genome). 
 Currently, SAVNet accepts only [Annovar input file](http://annovar.openbioinformatics.org/en/latest/user-guide/input/) format
-(We will soon update the sotfware so that it can accept the vcf format).
+(We will soon update the software so that it can accept the vcf format).
 Only the first five columns (Chr, Start, End, Ref, Alt) are used, and others are ignored.
 When the chromosome names are not chr-prefix (when using Genome Reference Consortium (GRC) genomes such as GRCh37), 
 add `--grc` option in execution of `savnet` command below.
