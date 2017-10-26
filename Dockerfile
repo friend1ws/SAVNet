@@ -42,9 +42,9 @@ RUN wget https://github.com/friend1ws/intron_retention_utils/archive/v0.3.0.tar.
     cd intron_retention_utils-0.3.0 && \
     python setup.py build install
 
-RUN wget https://github.com/friend1ws/SAVNet/archive/v0.2.0.tar.gz && \
-    tar xzvf v0.2.0.tar.gz && \
-    cd SAVNet-0.2.0 && \
+RUN wget https://github.com/friend1ws/SAVNet/archive/v0.2.1.tar.gz && \
+    tar xzvf v0.2.1.tar.gz && \
+    cd SAVNet-0.2.1 && \
     python setup.py build install
 
 

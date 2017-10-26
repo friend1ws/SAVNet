@@ -156,6 +156,13 @@ def main(args):
 
     if args.debug == False:
 
+        subprocess.call(["rm", "-rf", args.output_prefix + ".mut_merged.txt"])
+        subprocess.call(["rm", "-rf", args.output_prefix + ".SJ_merged.txt"])
+        subprocess.call(["rm", "-rf", args.output_prefix + ".SJ_merged.annot.txt"])
+        subprocess.call(["rm", "-rf", args.output_prefix + ".SJ_merged.associate.txt"])
+        subprocess.call(["rm", "-rf", args.output_prefix + ".IR_merged.txt"])
+        subprocess.call(["rm", "-rf", args.output_prefix + ".IR_merged.associate.txt"])
+        subprocess.call(["rm", "-rf", args.output_prefix + ".splicing_mutation.link_info.txt"])
         subprocess.call(["rm", "-rf", args.output_prefix + ".splicing.associate.txt"])
         subprocess.call(["rm", "-rf", args.output_prefix + ".splicing_mutation.mut_info.txt"])
         subprocess.call(["rm", "-rf", args.output_prefix + ".splicing_mutation.splicing_info.txt"])
