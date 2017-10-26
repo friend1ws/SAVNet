@@ -155,7 +155,7 @@ def main(args):
                             args.permutation_num, args.sv)
 
     if args.debug == False:
-        """
+
         subprocess.call(["rm", "-rf", args.output_prefix + ".splicing.associate.txt"])
         subprocess.call(["rm", "-rf", args.output_prefix + ".splicing_mutation.mut_info.txt"])
         subprocess.call(["rm", "-rf", args.output_prefix + ".splicing_mutation.splicing_info.txt"])
@@ -163,7 +163,7 @@ def main(args):
         subprocess.call(["rm", "-rf", args.output_prefix + ".splicing_mutation.count_summary.pruned.txt"])
         subprocess.call(["rm", "-rf", args.output_prefix + ".splicing_mutation.count_summary.BIC.txt"])
         subprocess.call(["rm", "-rf", args.output_prefix + ".splicing_mutation.count_summary.anno.txt"]) 
-        """
+
         for i in range(args.permutation_num):
             subprocess.call(["rm", "-rf", args.output_prefix + ".splicing_mutation.count_summary.perm" + str(i) + ".txt"])
             subprocess.call(["rm", "-rf", args.output_prefix + ".splicing_mutation.count_summary.pruned.perm" + str(i) + ".txt"])
