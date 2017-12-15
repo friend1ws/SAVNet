@@ -121,6 +121,8 @@ The value of `--sample_num_thres` can be tuned for large number of control sampl
 ## About result
 The following columns are added to the input files:
 
-* Gene_Symbol: Gene symbol affected by the SAV.
-* Sample_Name: Samples having the SAV.
-* Mutation_Key: {chromosome},{position},{reference allele},{alternative allele}
+* **Gene_Symbol**: Gene symbol affected by the SAV
+* **Sample_Name**: Samples having the SAV
+* **Mutation_Key**: {chromosome},{position},{reference allele},{alternative allele}
+* **Motif_Pos**: The position of disrupted or newly created splicing motif ({chromosome}:{start}-{end})
+* **Mutation_Type**: splicing donor dirsuption, splicing acceptor disruption, splicing donor creation or splicing acceptor creation
