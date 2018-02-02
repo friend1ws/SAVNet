@@ -3,7 +3,7 @@
 import sys, subprocess, os
 import utils, sample_conf
 
-def main(args):
+def savnet_main(args):
 
     output_prefix_dir = os.path.dirname(args.output_prefix)
     if output_prefix_dir != "" and not os.path.exists(output_prefix_dir):

@@ -7,5 +7,5 @@ def main():
 
     parser = create_parser()
     args = parser.parse_args()
-    expression_main(args)
+    savnet_main(args)
 
