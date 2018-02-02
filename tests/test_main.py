@@ -1,7 +1,7 @@
 #! /usr/bin/env python
 
 import unittest
-import os, tempfile, shutil, filecmp, tarfile
+import sys, os, tempfile, shutil, filecmp, tarfile
 import savnet 
 from check_download import *
 from make_savnet_input import *
@@ -48,6 +48,7 @@ class TestMain(unittest.TestCase):
         cur_dir = os.path.dirname(os.path.abspath(__file__))
         tmp_dir = tempfile.mkdtemp()
 
+        print >> sys.stderr, "Creating sample list file for SAVNET."
         make_savnet_input(cur_dir + "/resource/savnet_input.txt", \
                           cur_dir + "/resource/mutation", \
                           cur_dir + "/resource/junction", \
@@ -60,6 +61,7 @@ class TestMain(unittest.TestCase):
         sj_control_file = cur_dir + "/resource/control/SJ_control_2_4.bed.gz"
         ir_control_file = cur_dir + "/resource/control/IR_control_4.bed.gz"
 
+        print >> sys.stderr, "Executing SAVNET."
         args = self.parser.parse_args([sample_list_file, output_prefix, ref_genome, \
                                        "--SJ_pooled_control_file", sj_control_file, \
                                        "--IR_pooled_control_file", ir_control_file, "--grc"])
