@@ -1,5 +1,8 @@
 # SAVNet
 
+[![License: GPL v3](https://img.shields.io/badge/License-GPL%20v3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
+[![Build Status](https://travis-ci.org/friend1ws/SAVNet.svg?branch=devel)](https://travis-ci.org/friend1ws/SAVNet)
+
 ## Introduction
 
  software for extracting splicing associated variants (SAVs) from somatic mutation, splicing junction and intron retention data. 
