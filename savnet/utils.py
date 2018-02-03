@@ -852,7 +852,8 @@ def organize_mut_splicing_count(input_file, mut2sample_file, output_count_file, 
 
 
     # last flush
-    print >> hout1, temp_gene + '\t' + ';'.join(temp_mut2sample) + '\t' + ';'.join(temp_splicing_count) + '\t' + ';'.join(temp_mut_splicing_link)
+    if temp_gene != "":
+        print >> hout1, temp_gene + '\t' + ';'.join(temp_mut2sample) + '\t' + ';'.join(temp_splicing_count) + '\t' + ';'.join(temp_mut_splicing_link)
 
     for id in sorted(temp_id2mut):
         print >> hout2, temp_gene + '\t' + id + '\t' + temp_id2mut[id] + '\t' + ';'.join(temp_mut2info[temp_id2mut[id]]) 
@@ -970,7 +971,8 @@ def organize_mut_splicing_count2(input_file, mut2sample_file, output_count_file,
 
 
     # flush the result
-    print >> hout1, temp_gene + '\t' + ';'.join(temp_mut2sample) + '\t' + ';'.join(temp_splicing_count) + '\t' + ';'.join(temp_mut_splicing_link)
+    if temp_gene != "":
+        print >> hout1, temp_gene + '\t' + ';'.join(temp_mut2sample) + '\t' + ';'.join(temp_splicing_count) + '\t' + ';'.join(temp_mut_splicing_link)
 
     # print temp_mut_id + '\t' + temp_splicing_id 
     # print temp_ids2link_info
