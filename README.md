@@ -12,11 +12,11 @@
 
 ### Python
 
-Python (>= 2.7), `pysam (>= 0.8.1)`, [`junc_utils`](https://github.com/friend1ws/junc_utils), [`intron retention_utils`](https://github.com/friend1ws/intron_retention_utils) packages.
+Python (>= 2.7), pysam, [annot_utils](https://github.com/friend1ws/annot_utils), [junc_utils](https://github.com/friend1ws/junc_utils), [intron retention_utils](https://github.com/friend1ws/intron_retention_utils) packages.
 
 ### Software
 
-[hstlib](http://www.htslib.org)
+[htslib](http://www.htslib.org), [bedtools](http://bedtools.readthedocs.io/en/latest/)
 
 ## Install 
 ```
