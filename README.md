@@ -12,7 +12,7 @@
 
 ### Python
 
-Python (>= 2.7), pysam, [annot_utils](https://github.com/friend1ws/annot_utils), [junc_utils](https://github.com/friend1ws/junc_utils), [intron retention_utils](https://github.com/friend1ws/intron_retention_utils) packages.
+Python (>= 2.7), pysam, [annot_utils](https://github.com/friend1ws/annot_utils)(>= 0.2.0), [junc_utils](https://github.com/friend1ws/junc_utils)(>= 0.3.0), [intron retention_utils](https://github.com/friend1ws/intron_retention_utils)(>= 0.4.0) packages.
 
 ### Software
 
