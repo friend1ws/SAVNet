@@ -480,8 +480,9 @@ def merge_mut(mutation_file_list, output_file):
 
 
     mut2sample = {}
-    sample_num = "1"
+    sample_ind = 0
     for mut_file in mutation_file_list:
+        sample_ind = sample_ind + 1
         with open(mut_file, 'r') as hin2:
             for line2 in hin2:
                 F2 = line2.rstrip('\n').split('\t')
@@ -493,12 +494,13 @@ def merge_mut(mutation_file_list, output_file):
                 if key not in mut2sample: 
                     mut2sample[key] = []
               
-                mut2sample[key].append(sample_num)
+                mut2sample[key].append(str(sample_ind))
 
-        sample_num = str(int(sample_num) + 1)
+    sample_num = sample_ind
 
     hout = open(output_file, 'w')
     for mut in sorted(mut2sample):
+        if len(mut2sample[mut]) == sample_num: continue
         print >> hout, mut + '\t' + ','.join(mut2sample[mut]) 
 
     hout.close()
@@ -1031,6 +1033,9 @@ def simple_link_effect_check(mutation_state, splicing_count, link, weight_vector
 def simple_basic_effect_check(mutation_state, splicing_count, link, weight_vector):
 
     def median(numbers):
+        if len(numbers) == 0:
+            print >> sys.stderr, "Vector of zero length was put to median function. Return 0"
+            return 0
         return (sorted(numbers)[int(round((len(numbers) - 1) / 2.0))] + sorted(numbers)[int(round((len(numbers) - 1) // 2.0))]) / 2.0
 
     mutation_states = mutation_state.split(';')
@@ -1049,11 +1054,16 @@ def simple_basic_effect_check(mutation_state, splicing_count, link, weight_vecto
 
         # extract samples with the mutation of the link in consideration
         mut_vector = [0] * sample_num
+        """
         for j in range(len(mutation_states)):
             tmut_id, sample_id_str = mutation_states[j].split(':')
             # if tmut_id == mut_id:
             for sample_id in sample_id_str.split(','):
                 mut_vector[int(sample_id) - 1] = 1
+        """
+        tmut_id, sample_id_str = mutation_states[int(mut_id) - 1].split(':')
+        for sample_id in sample_id_str.split(','):
+            mut_vector[int(sample_id) - 1] = 1
 
         median_basic_effect_vector[i] = median([int(splicing_cont_vector[j]) for j in range(sample_num) if mut_vector[j] == 0])
 

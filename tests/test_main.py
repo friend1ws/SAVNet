@@ -62,9 +62,13 @@ class TestMain(unittest.TestCase):
         ir_control_file = cur_dir + "/resource/control/IR_control_4.bed.gz"
 
         print >> sys.stderr, "Executing SAVNET."
-        args = self.parser.parse_args([sample_list_file, output_prefix, ref_genome, \
-                                       "--SJ_pooled_control_file", sj_control_file, \
-                                       "--IR_pooled_control_file", ir_control_file, "--grc"])
+
+        savnet_args = [sample_list_file, output_prefix, ref_genome, \
+                           "--SJ_pooled_control_file", sj_control_file, \
+                           "--IR_pooled_control_file", ir_control_file, "--grc"]
+        print "savnet" + ' ' + ' '.join(savnet_args)
+
+        args = self.parser.parse_args(savnet_args)
         savnet.run.savnet_main(args)
 
         self.assertTrue(394 <= len(open(tmp_dir + "/test.savnet.result.txt", 'r').readlines()) <= 404)
