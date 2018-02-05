@@ -86,7 +86,7 @@ def create_parser():
     parser.add_argument("--beta1", type = float, default = 0.01,
                         help = "the rate parameter of prior Gamma Distribution for active states") 
 
-    parser.add_argument("--log_BF_thres", type = float, default = 5.0,
+    parser.add_argument("--log_BF_thres", type = float, default = 3.0,
                         help = "the threshould of logaraithm of Bayes Factor (default: %(default)s)")
 
     parser.add_argument("--effect_size_thres", type = float, default = 3.0,

@@ -1451,8 +1451,9 @@ def check_significance(input_file, output_file, weight_vector, log_BF_thres, alp
 
             for mut_id in mut2log_ML_null:
 
-            # if log_BF_sum > log_BF_thres:
-                print >> hout, '\t'.join(F) + '\t' + mut_id + '\t' + str(round(mut2log_BF[mut_id], 4)) + '\t' + ','.join([str(x) for x in mut2conf_max[mut_id]])
+                # if log_BF_sum > log_BF_thres:
+                if mut2log_BF[mut_id] > log_BF_thres:
+                    print >> hout, '\t'.join(F) + '\t' + mut_id + '\t' + str(round(mut2log_BF[mut_id], 4)) + '\t' + ','.join([str(x) for x in mut2conf_max[mut_id]])
                 # print >> hout, '\t'.join(F) + '\t' + str(log_BF_sum) + '\t' + ','.join([str(x) for x in conf_max]) 
 
             # elapsed_time = time.time() - start_time
