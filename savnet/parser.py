@@ -19,9 +19,6 @@ def create_parser():
     parser.add_argument("output_prefix", metavar = "output_prefix", default = None, type = str, 
                         help = "the prefix of the output")
 
-    # parser.add_argument("resource_dir", metavar = "resource_dir", default = None, type = str,
-    #                     help = "the path to resource directory for junc_utils")
-
     parser.add_argument("--grc", default = False, action = 'store_true',
                         help = "convert chromosome names to Genome Reference Consortium nomenclature (default: %(default)s)")
 
@@ -34,8 +31,8 @@ def create_parser():
     parser.add_argument("--sv", action='store_true',
                         help = "analysis structural variation file")
 
-    parser.add_argument("--branchpoint", action='store_true',
-                        help = "include branchpoint to the analysis")
+#     parser.add_argument("--branchpoint", action='store_true',
+#                         help = "include branchpoint to the analysis")
 
     parser.add_argument("--donor_size", metavar = "donor_size", default = "3,6", type = str,
                         help = "splicing donor site size (exonic region size, intronic region size) (default: %(default)s)")

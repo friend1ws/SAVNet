@@ -31,7 +31,7 @@ def savnet_main(args):
                               args.output_prefix + ".SJ_merged.associate.txt", "--reference", args.reference_genome,
                               "--mutation_format", "anno", "--donor_size", args.donor_size, "--acceptor_size", args.acceptor_size,
                               "--genome_id", args.genome_id]
-        if args.branchpoint: associate_commands.append("--branchpoint")
+        # if args.branchpoint: associate_commands.append("--branchpoint")
         if args.grc: associate_commands.append("--grc")
         subprocess.call(associate_commands)
 
