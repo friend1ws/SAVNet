@@ -1,11 +1,14 @@
 #! /usr/bin/env python
 
+import copy
+
+
 class Network(object):
 
     def __init__(self, gene, mutation_status, splicing_counts, link_vector, sample_num, weight_vector):
         self.gene = gene
         self.mutation_status = mutation_status
-        self.splicing_counts = splicint_counts
+        self.splicing_counts = splicing_counts
         self.link_vector = link_vector
         self.sample_num = sample_num
         self.weight_vector = weight_vector
@@ -13,6 +16,8 @@ class Network(object):
 
         self.link_vector2effect_size = {}
         self.link_vector2median_count = {}
+        self.clustered_link_vector = []
+
 
 
     def prune_link_vector(self, margin):
@@ -24,8 +29,10 @@ class Network(object):
 
     def cluster_link_vector(self):
 
-        simple_clusterd_link_vector = self.__simple_cluster_link()
-        for sub_cluster_link in simple_clusterd_link_vector:
+        # self.__simple_cluster_link()
+        # simple_clusterd_link_vector = self.clustered_link_vector
+        # for sub_cluster_link in simple_clusterd_link_vector:
+        for sub_cluster_link in self.__simple_cluster_link():
 
             if len(sub_cluster_link) > 15:
 
@@ -41,13 +48,13 @@ class Network(object):
     def __link_effect_size_scan(self, pseudo_count = 0.1):
 
         # simple check for each link
-        for mut_id, sp_id in self.link_vector):
+        for mut_id, sp_id in self.link_vector:
             cur_splicing_count_vector = self.splicing_counts[sp_id] 
 
             # extract samples with the mutation of the link in consideration
             mut_vector = [0] * self.sample_num
-            for sample_id in self.mutation_states[mut_id]
-                mut_vector[sample_id - 1] = 1
+            for sample_id in self.mutation_status[mut_id]:
+                mut_vector[sample_id] = 1
 
             weight_sum_null = sum([float(weight_vector[j]) for j in range(sample_num) if mut_vector[j] == 0])
             weight_sum_target = sum([float(weight_vector[j]) for j in range(sample_num) if mut_vector[j] == 1])
@@ -78,17 +85,18 @@ class Network(object):
             # extract samples with the mutation of the link in consideration
             mut_vector = [0] * self.sample_num
             mut_vector = [0] * self.sample_num
-            for sample_id in self.mutation_states[mut_id]
-                mut_vector[sample_id - 1] = 1
+            for sample_id in self.mutation_status[mut_id]:
+                mut_vector[sample_id] = 1
 
-            self.link_vector2median_count[(mut_id, sp_id)] = median([int(splicing_cont_vector[j]) for j in range(sample_num) if mut_vector[j] == 0])
+            self.link_vector2median_count[(mut_id, sp_id)] = median([int(cur_splicing_count_vector[j]) for j in range(sample_num) if mut_vector[j] == 0])
     
 
     # simply cluster links by their topologies
     def __simple_cluster_link(self):
 
+        simple_clustered_link = []
         mut_id2sp_id = {}
-        for mut_id, sp_id in self.link_vector:
+        for mut_id, sp_id in self.pruned_link_vector:
             if mut_id not in mut_id2sp_id: mut_id2sp_id[mut_id] = []
             mut_id2sp_id[mut_id].append(sp_id)
 
@@ -119,11 +127,36 @@ class Network(object):
 
 
             tmp_clink_vector = []
-            for c_mut_ids in sorted(clustered_ids):
-                tmp_clink.append([(c_mut_ids, mut_id2sp_id[x]) for x in mut_id2sp_id[c_mut_id]])  
-                remaining_clustered_ids.remove(active_ids[j])
+            for c_mut_id in sorted(clustered_ids):
+                tmp_clink_vector = tmp_clink_vector + [(c_mut_id, x) for x in mut_id2sp_id[c_mut_id]]
+                remaining_ids.remove(c_mut_id)
 
-            clustered_link_vector.append(tmp_clink_vector)
+            # simple_clustered_link.append(tmp_clink_vector)
+            yield tmp_clink_vector
 
-        return clustered_link_vector 
+        # return simple_clustered_link
+
+if __name__ == "__main__":
+
+    mutation_status = {0: [2]}
+    splicing_counts = [[0,0,0,2,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+                       [0,0,19,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+                       [0,0,3,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]]
+    link_vector = [(0, 0), (0, 1), (0, 2)]
+    sample_num = 26
+    weight_vector = [1] * 26
+
+    network = Network("KDM5A", mutation_status, splicing_counts, link_vector, sample_num, weight_vector)
+    network.prune_link_vector(3.0)
+
+
+    print network.link_vector2effect_size
+    print network.link_vector2median_count
+    print network.pruned_link_vector
+
+
+    network.cluster_link_vector()
+    print network.clustered_link_vector
+
+
 
