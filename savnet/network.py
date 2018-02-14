@@ -1,7 +1,7 @@
 #! /usr/bin/env python
 
-import copy
-
+import copy, math
+import math_utils
 
 class Network(object):
 
@@ -18,6 +18,7 @@ class Network(object):
         self.link_vector2median_count = {}
         self.clustered_link_vector = []
 
+        self.mut2log_BF = {}
 
 
     def prune_link_vector(self, margin):
@@ -43,6 +44,56 @@ class Network(object):
             # may be removed at the above filtering step
             if len(sub_cluster_link) > 0:
                 self.clustered_link_vector.append(sub_cluster_link)
+
+    
+    def get_averaged_bayes_factors(self, alpha0, beta0, alpha1, beta1):
+
+        for sub_cluster_link in self.clustered_link_vector:
+
+            conf_dim = len(sub_cluster_link)
+
+            mut2log_ML_null = {}
+            mut2log_ML_nonnull = {}
+            mut2log_ML_nonnull_max = {}
+            mut2conf_max = {}
+            mut2log_BF = {}
+
+            # get mutations associated with the current splicing
+            for mut_id, _ in sub_cluster_link:
+                mut2log_ML_null[mut_id] = [] 
+                mut2log_ML_nonnull[mut_id] = []
+                mut2log_ML_nonnull_max[mut_id] = float("-inf") 
+                mut2conf_max[mut_id] = [0] * conf_dim
+                mut2log_BF[mut_id] = float("-inf")
+
+
+            for conf in sorted(math_utils.generate_configurations(conf_dim)):
+
+                # get active mutation in the configuration in consideration
+                active_mut_list = []
+                # get mutations associated with the current splicing
+                for j in range(len(sub_cluster_link)):
+                    if int(conf[j]) == 0: continue
+                    mut_id, sp_id = sub_cluster_link[j]
+                    active_mut_list.append(mut_id)
+
+                log_ML = self.__get_log_marginal_likelihood(sub_cluster_link, conf, alpha0, beta0, alpha1, beta1)
+
+                for mut_id in mut2log_ML_null:
+                    if mut_id in active_mut_list:
+                        mut2log_ML_nonnull[mut_id].append(log_ML)
+                        if log_ML > mut2log_ML_nonnull_max[mut_id]:
+                            mut2log_ML_nonnull_max[mut_id] = log_ML
+                            mut2conf_max[mut_id] = conf
+                    else:
+                        mut2log_ML_null[mut_id].append(log_ML)
+
+
+            for mut_id in mut2log_ML_null:
+
+                self.mut2log_BF[mut_id] = math_utils.soft_max(mut2log_ML_nonnull[mut_id]) - math_utils.soft_max(mut2log_ML_null[mut_id]) - \
+                                            math.log(len(mut2log_ML_nonnull[mut_id])) + math.log(len(mut2log_ML_null[mut_id]))
+
 
 
     def __link_effect_size_scan(self, pseudo_count = 0.1):
@@ -71,12 +122,6 @@ class Network(object):
 
     def __link_median_count_scan(self):
 
-        def median(numbers):
-            if len(numbers) == 0:
-                print >> sys.stderr, "Vector of zero length was put to median function. Return 0"
-                return 0
-            return (sorted(numbers)[int(round((len(numbers) - 1) / 2.0))] + sorted(numbers)[int(round((len(numbers) - 1) // 2.0))]) / 2.0
-
         # simple check for each link
         for mut_id, sp_id in link_vector:
             # cur_mut_id, cur_sp_id = self.link_vector[i]
@@ -88,7 +133,7 @@ class Network(object):
             for sample_id in self.mutation_status[mut_id]:
                 mut_vector[sample_id] = 1
 
-            self.link_vector2median_count[(mut_id, sp_id)] = median([int(cur_splicing_count_vector[j]) for j in range(sample_num) if mut_vector[j] == 0])
+            self.link_vector2median_count[(mut_id, sp_id)] = math_utils.median([int(cur_splicing_count_vector[j]) for j in range(sample_num) if mut_vector[j] == 0])
     
 
     # simply cluster links by their topologies
@@ -136,6 +181,59 @@ class Network(object):
 
         # return simple_clustered_link
 
+
+    def __get_log_marginal_likelihood(self, sub_cluster_link, configuration_vector, alpha0, beta0, alpha1, beta1):
+
+        active_sp_list = []
+        # get mutations associated with the current splicing
+        for mut_id, sp_id in sub_cluster_link:
+            active_sp_list.append(sp_id)
+
+
+        log_marginal_likelihood = 0
+        for sp_id in range(len(self.splicing_counts)):
+
+            if sp_id not in active_sp_list: continue
+
+            cur_splicing_count_vector = self.splicing_counts[sp_id]
+            active_mut_list = []
+
+            # get mutations associated with the current splicing
+            for link_id in range(len(sub_cluster_link)):
+                if configuration_vector[link_id] == 0: continue
+                mut_id, link_sp_id = sub_cluster_link[link_id]
+                if link_sp_id == sp_id: active_mut_list.append(mut_id)
+
+            # param_num = param_num + len(active_mut_list) + 1
+            active_mut_vector = [0] * self.sample_num
+
+            # set mutation status
+            for mut_id in self.mutation_status: 
+                if mut_id in active_mut_list:
+                    sample_id_vector = self.mutation_status[mut_id]
+                    for sample_id in sample_id_vector:
+                        active_mut_vector[sample_id] = 1
+
+            # for inactive mutations
+            sample_sum = len([n for n in range(self.sample_num) if active_mut_vector[n] == 0])
+            count_sum = sum([int(cur_splicing_count_vector[n]) for n in range(self.sample_num) if active_mut_vector[n] == 0])
+            weight_sum = sum([self.weight_vector[n] for n in range(self.sample_num) if active_mut_vector[n] == 0])
+
+            partial_log_marginal_likelihood = 0
+            if sample_sum > 0:
+                partial_log_marginal_likelihood = partial_log_marginal_likelihood + math.lgamma(count_sum + alpha0) - math.lgamma(alpha0) + \
+                                                    alpha0 * math.log(beta0) - (count_sum + alpha0) * math.log(weight_sum + beta0)
+
+            for n in range(self.sample_num):
+                if active_mut_vector[n] == 0: continue
+                partial_log_marginal_likelihood = partial_log_marginal_likelihood + math.lgamma(int(cur_splicing_count_vector[n]) + alpha1) - math.lgamma(alpha1) + \
+                                                    alpha1 * math.log(beta1) - (int(cur_splicing_count_vector[n]) + alpha1) * math.log(self.weight_vector[n] + beta1)
+
+            log_marginal_likelihood = log_marginal_likelihood + partial_log_marginal_likelihood
+
+        return(log_marginal_likelihood)
+
+
 if __name__ == "__main__":
 
     mutation_status = {0: [2]}
@@ -144,7 +242,8 @@ if __name__ == "__main__":
                        [0,0,3,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]]
     link_vector = [(0, 0), (0, 1), (0, 2)]
     sample_num = 26
-    weight_vector = [1] * 26
+    weight_vector = [5.2935, 2.5843, 4.6718, 6.7032, 6.3449, 4.8819, 3.2902, 11.6925, 9.7603, 4.4712, 5.8023, 7.3304, 6.6022,
+                     6.8118, 8.0286, 5.5164, 6.7205, 6.3547, 6.5036, 4.2754, 6.989, 5.63, 7.514, 6.6156, 4.1002, 6.0268]
 
     network = Network("KDM5A", mutation_status, splicing_counts, link_vector, sample_num, weight_vector)
     network.prune_link_vector(3.0)
@@ -159,4 +258,6 @@ if __name__ == "__main__":
     print network.clustered_link_vector
 
 
+    network.get_averaged_bayes_factors(1.0, 1.0, 1.0, 0.01)
+    print network.mut2log_BF
 
