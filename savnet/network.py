@@ -2,16 +2,20 @@
 
 import copy, math
 import math_utils
+from sav import Sav
 
 class Network(object):
 
-    def __init__(self, gene, mutation_status, splicing_counts, link_vector, sample_num, weight_vector):
+    def __init__(self, gene, mutation_status, splicing_counts, link2info, sample_list, weight_vector):
         self.gene = gene
         self.mutation_status = mutation_status
         self.splicing_counts = splicing_counts
-        self.link_vector = link_vector
-        self.sample_num = sample_num
+        self.link_vector = link2info.keys()
+        self.link2info = link2info
+        self.sample_list = sample_list
+        self.sample_num = len(sample_list)
         self.weight_vector = weight_vector
+
         self.pruned_link_vector = []
 
         self.link_vector2effect_size = {}
@@ -19,6 +23,7 @@ class Network(object):
         self.clustered_link_vector = []
 
         self.mut2log_BF = {}
+        self.mut2significant_links = {}
 
 
     def prune_link_vector(self, margin):
@@ -30,9 +35,6 @@ class Network(object):
 
     def cluster_link_vector(self):
 
-        # self.__simple_cluster_link()
-        # simple_clusterd_link_vector = self.clustered_link_vector
-        # for sub_cluster_link in simple_clusterd_link_vector:
         for sub_cluster_link in self.__simple_cluster_link():
 
             if len(sub_cluster_link) > 15:
@@ -94,8 +96,34 @@ class Network(object):
                 self.mut2log_BF[mut_id] = math_utils.soft_max(mut2log_ML_nonnull[mut_id]) - math_utils.soft_max(mut2log_ML_null[mut_id]) - \
                                             math.log(len(mut2log_ML_nonnull[mut_id])) + math.log(len(mut2log_ML_null[mut_id]))
 
+                max_conf = mut2conf_max[mut_id]
+                significant_links = [sub_cluster_link[i] for i in range(len(max_conf)) if max_conf[i] == 1]
+                self.mut2significant_links[mut_id] = significant_links
 
 
+    def export_to_savs(self, log_BF_thres):
+   
+        sav_list = []
+        for mut_id in self.mut2log_BF:
+            if self.mut2log_BF[mut_id] < log_BF_thres: continue
+
+            active_sample_list = [self.sample_list[i] for i in self.mutation_status[mut_id]]
+            for active_link in self.mut2significant_links[mut_id]:
+                cur_mut_id, cur_sp_id = active_link
+                if cur_mut_id != mut_id: continue
+
+                cur_splicing_counts = self.splicing_counts[cur_sp_id]
+                active_splicing_counts = [cur_splicing_counts[i] for i in self.mutation_status[mut_id]]
+                active_link_info = self.link2info[active_link]
+
+                tsav = Sav(self.gene, active_sample_list, active_link_info, active_splicing_counts, self.mut2log_BF[mut_id])
+                sav_list.append(tsav)
+
+        return sav_list
+               
+ 
+         
+        
     def __link_effect_size_scan(self, pseudo_count = 0.1):
 
         # simple check for each link
@@ -236,16 +264,28 @@ class Network(object):
 
 if __name__ == "__main__":
 
+    from collections import namedtuple
+
     mutation_status = {0: [2]}
     splicing_counts = [[0,0,0,2,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
                        [0,0,19,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
                        [0,0,3,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]]
     link_vector = [(0, 0), (0, 1), (0, 2)]
     sample_num = 26
+    sample_list = ["A427", "A549", "ABC-1", "H1299", "H1437", "H1648", "H1650", "H1703", "H1819", 
+                   "H1975", "H2126", "H2228", "H2347", "H322", "II-18", "LC2_ad", "PC-14", "PC-3", 
+                   "PC-7", "PC-9", "RERF-LC-Ad1", "RERF-LC-Ad2", "RERF-LC-KJ", "RERF-LC-MS", "RERF-LC-OK", "VMRC-LCD"]
+
     weight_vector = [5.2935, 2.5843, 4.6718, 6.7032, 6.3449, 4.8819, 3.2902, 11.6925, 9.7603, 4.4712, 5.8023, 7.3304, 6.6022,
                      6.8118, 8.0286, 5.5164, 6.7205, 6.3547, 6.5036, 4.2754, 6.989, 5.63, 7.514, 6.6156, 4.1002, 6.0268]
 
-    network = Network("KDM5A", mutation_status, splicing_counts, link_vector, sample_num, weight_vector)
+    Link_info_mut = namedtuple("Link_info_mut", ("Mutation_Key", "Motif_Pos", "Mutation_Type", "Is_Canonical", "Splicing_Key", "Splicing_Class", "Is_Inframe"))
+    link2info = {(0, 0): Link_info_mut("12,475272,T,A", "12:475270-475276,-", "splicing acceptor disruption", "canonical", "12:461491-493196", "exon-skip", "in-frame"),
+                 (0, 1): Link_info_mut("12,475272,T,A", "12:475270-475276,-", "splicing acceptor disruption", "canonical", "12:472264-493196", "exon-skip", "in-frame"),
+                 (0, 2): Link_info_mut("12,475272,T,A", "12:475270-475276,-", "splicing acceptor disruption", "canonical", "12:475260-493196", "alternative-3'-splice-site", "in-frame")}
+
+
+    network = Network("KDM5A", mutation_status, splicing_counts, link2info, sample_list, weight_vector)
     network.prune_link_vector(3.0)
 
 
@@ -260,4 +300,9 @@ if __name__ == "__main__":
 
     network.get_averaged_bayes_factors(1.0, 1.0, 1.0, 0.01)
     print network.mut2log_BF
+    print network.mut2significant_links
 
+    for sav in network.export_to_savs(3.0):
+        print sav.print_records()
+
+ 
