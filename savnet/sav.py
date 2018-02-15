@@ -15,5 +15,6 @@ class Sav(object):
 
 
     def print_records(self):
-        return '\t'.join([self.gene, ';'.join(self.sample_list), self.link_info])
+        # return '\t'.join([self.gene, ';'.join(self.sample_list), self.link_info])
+        return self.gene + '\t' + ';'.join(self.sample_list)
 
