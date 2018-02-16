@@ -1,7 +1,7 @@
 #! /usr/bin/env python
 
 import sys, subprocess, os
-import utils, sample_conf
+import preprocess, utils, sample_conf
 
 def savnet_main(args):
 
@@ -15,13 +15,13 @@ def savnet_main(args):
     sconf.parse_file(args.sample_list_file, args.sv)
 
     if args.sv == False:
-        utils.merge_mut(sconf.mut_files, args.output_prefix + ".mut_merged.txt")
+        preprocess.merge_mut(sconf.mut_files, args.output_prefix + ".mut_merged.txt")
     else:
-        utils.merge_sv(sconf.sv_files, args.output_prefix + ".sv_merged.txt")
+        preprocess.merge_sv(sconf.sv_files, args.output_prefix + ".sv_merged.txt")
 
     ##########
     # splicing_junction
-    utils.merge_SJ2(sconf.SJ_files, args.output_prefix + ".SJ_merged.txt", args.SJ_pooled_control_file, args.SJ_num_thres, args.keep_annotated)
+    preprocess.merge_SJ2(sconf.SJ_files, args.output_prefix + ".SJ_merged.txt", args.SJ_pooled_control_file, args.SJ_num_thres, args.keep_annotated)
 
     annotate_commands = ["junc_utils", "annotate", args.output_prefix + ".SJ_merged.txt", args.output_prefix + ".SJ_merged.annot.txt",
                          "--genome_id", args.genome_id]
@@ -45,7 +45,7 @@ def savnet_main(args):
 
     ##########
     # intron_retention
-    utils.merge_intron_retention(sconf.IR_files, args.output_prefix + ".IR_merged.txt", 
+    preprocess.merge_intron_retention(sconf.IR_files, args.output_prefix + ".IR_merged.txt", 
                                  args.IR_pooled_control_file, args.IR_ratio_thres, args.IR_num_thres)
 
     if args.sv == False:
@@ -63,7 +63,7 @@ def savnet_main(args):
     #########
     # chimera
     if args.sv:
-        utils.merge_chimera(sconf.chimera_files, args.output_prefix + ".chimera_merged.txt", 
+        preprocess.merge_chimera(sconf.chimera_files, args.output_prefix + ".chimera_merged.txt", 
                             args.chimera_pooled_control_file, args.chimera_num_thres, args.chimera_overhang_thres)
 
         subprocess.call(["chimera_utils", "associate", args.output_prefix + ".chimera_merged.txt",
@@ -73,15 +73,15 @@ def savnet_main(args):
     ##########
     # organize association
     if args.sv == False:
-        utils.merge_SJ_IR_files(args.output_prefix + ".SJ_merged.associate.txt", 
-                                args.output_prefix + ".IR_merged.associate.txt",
-                                args.output_prefix + ".splicing.associate.txt")
+        preprocess.merge_SJ_IR_files(args.output_prefix + ".SJ_merged.associate.txt", 
+                                     args.output_prefix + ".IR_merged.associate.txt",
+                                     args.output_prefix + ".splicing.associate.txt")
 
     else:
-        utils.merge_SJ_IR_chimera_files_sv(args.output_prefix + ".SJ_merged.associate.txt",
-                                           args.output_prefix + ".IR_merged.associate.txt",
-                                           args.output_prefix + ".chimera_merged.associate.txt",
-                                           args.output_prefix + ".splicing.associate.txt")
+        preprocess.merge_SJ_IR_chimera_files_sv(args.output_prefix + ".SJ_merged.associate.txt",
+                                                args.output_prefix + ".IR_merged.associate.txt",
+                                                args.output_prefix + ".chimera_merged.associate.txt",
+                                                args.output_prefix + ".splicing.associate.txt")
 
     utils.organize_mut_splicing_count2(args.output_prefix + ".splicing.associate.txt",
                                        args.output_prefix + ".mut_merged.txt",

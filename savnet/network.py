@@ -108,16 +108,18 @@ class Network(object):
             if self.mut2log_BF[mut_id] < log_BF_thres: continue
 
             active_sample_list = [self.sample_list[i] for i in self.mutation_status[mut_id]]
+            active_splicing_counts_vector = []
+            active_link_info_vector = [] 
             for active_link in self.mut2significant_links[mut_id]:
                 cur_mut_id, cur_sp_id = active_link
                 if cur_mut_id != mut_id: continue
 
                 cur_splicing_counts = self.splicing_counts[cur_sp_id]
-                active_splicing_counts = [cur_splicing_counts[i] for i in self.mutation_status[mut_id]]
-                active_link_info = self.link2info[active_link]
+                active_splicing_counts_vector.append([cur_splicing_counts[i] for i in self.mutation_status[mut_id]])
+                active_link_info_vector.append(self.link2info[active_link])
 
-                tsav = Sav(self.gene, active_sample_list, active_link_info, active_splicing_counts, self.mut2log_BF[mut_id])
-                sav_list.append(tsav)
+            tsav = Sav(self.gene, active_sample_list, active_link_info_vector, active_splicing_counts_vector, self.mut2log_BF[mut_id])
+            sav_list.append(tsav)
 
         return sav_list
                
