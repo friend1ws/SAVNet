@@ -6,6 +6,7 @@ except:
     import pickle
 
 
+import random
 from collections import namedtuple
 from network import Network
 
@@ -38,13 +39,13 @@ def create_network_list(merged_candidate_link_list, network_pickles_file, mut2sa
             for line in hin:
                 F = line.rstrip('\n').split('\t')
                 mut = '\t'.join(F[0:5])
-                mut2sample[mut] = F[5]
+                mut2sample[mut] = [int(x) - 1 for x in F[5].split(',')]
     else:
         with open(mut2sample_file, 'r') as hin:
             for line in hin:
                 F = line.rstrip('\n').split('\t')
                 mut = ','.join(F[0:7])
-                mut2sample[mut] = F[7]
+                mut2sample[mut] = [int(x) - 1 for x in F[7].split(',')]
 
 
     out_s = open(network_pickles_file, 'wb')
@@ -74,11 +75,6 @@ def create_network_list(merged_candidate_link_list, network_pickles_file, mut2sa
                 if temp_gene != "":
                     # flush the result
                     network = Network(temp_gene, temp_mutation_status, temp_splicing_counts, temp_link2info, sample_list, weight_vector)    
-                    print network.gene
-                    print network.mutation_status
-                    print network.splicing_counts
-                    print network.link2info
-
                     pickle.dump(Network(temp_gene, temp_mutation_status, temp_splicing_counts, temp_link2info, sample_list, weight_vector), out_s)
 
                 temp_gene = F[header2ind["Gene_Symbol"]]
@@ -101,7 +97,7 @@ def create_network_list(merged_candidate_link_list, network_pickles_file, mut2sa
             splicing_key = F[header2ind["Splicing_Key"]]
             if splicing_key not in temp_splicing_key2id:
                 temp_splicing_key2id[splicing_key] = temp_splicing_id
-                temp_splicing_counts.append(F[header2ind["Read_Counts"]])
+                temp_splicing_counts.append([int(x) for x in F[header2ind["Read_Counts"]].split(',')])
                 temp_splicing_id = temp_splicing_id + 1
 
 
@@ -150,17 +146,80 @@ q            else:
 
 
 
-def execute_savnet(network_pickles_file):
+def execute_savnet(network_pickles_file, sample_list, permutation_num):
+
+
+    sample_num = len(sample_list)
+    sav_list_target = []
+    logBF_values_target = []
 
     in_s = open(network_pickles_file, 'rb')
     while True:
         try:
             network = pickle.load(in_s)
-            print network.gene
-            print network.mutation_status
             network.prune_link_vector(3.0)
+            network.cluster_link_vector()
+            network.get_averaged_bayes_factors(1.0, 1.0, 1.0, 0.01)
+
+            for sav in network.export_to_savs(3.0):
+                sav_list_target.append(sav)
+                logBF_values_target.append(sav.score)
+
         except EOFError:
             break
+
+
+    logBF_values_null = []
+    sav_lists_permutation = []
+    for i in range(permutation_num):
+        temp_sav_list = []
+
+        seed = range(sample_num)
+        no_overlap = 0
+        while no_overlap == 0:
+           random.shuffle(seed)
+           overlap_num = sum([seed[i] == i for i in range(sample_num)])
+           if overlap_num == 0: no_overlap = 1
+
+        print seed
+        in_s = open(network_pickles_file, 'rb')
+        while True:
+            try:
+                network = pickle.load(in_s)
+                network.execute_permutation(seed)
+                network.prune_link_vector(3.0)
+                network.cluster_link_vector()
+                network.get_averaged_bayes_factors(1.0, 1.0, 1.0, 0.01)
+    
+                for sav in network.export_to_savs(3.0):
+                    temp_sav_list.append(sav)
+                    logBF_values_null.append(sav.score)
+
+            except EOFError:
+                break
+
+        sav_lists_permutation.append(temp_sav_list)
+
+
+
+    logBF2FPR = {}
+    for logBF in logBF_values_target:
+        null_num_est = float(len([x for x in logBF_values_null if x >= logBF])) / permutation_num
+        nonnull_num = float(len([x for x in logBF_values_target if x >= logBF]))
+        pFPR = null_num_est / nonnull_num if nonnull_num > 0.0 else 0.0
+        logBF2FPR[logBF] = pFPR
+ 
+    logBF2qvalue = {}
+    temp_min_FPR = float("inf")
+    for logBF in sorted(logBF2FPR, key = float):
+        if logBF2FPR[logBF] <= temp_min_FPR:
+            temp_min_FPR = logBF2FPR[logBF]
+        logBF2qvalue[logBF] = temp_min_FPR
+
+
+    for sav in sav_list_target:
+        sav.set_fdr(logBF2qvalue[sav.score])
+        print sav.print_records()
 
 
 if __name__ == "__main__":
@@ -176,7 +235,7 @@ if __name__ == "__main__":
 
     create_network_list(sys.argv[1], sys.argv[2], sys.argv[3], sample_list, weight_vector)
 
-    execute_savnet(sys.argv[2])
+    execute_savnet(sys.argv[2], sample_list, 100)
 
 
 

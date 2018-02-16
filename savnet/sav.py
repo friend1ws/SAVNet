@@ -14,7 +14,6 @@ class Sav(object):
     def set_fdr(self, fdr):
         self.fdr = fdr
 
-
     def print_records(self):
 
         records = []
@@ -27,7 +26,7 @@ class Sav(object):
                                          link_info.Is_Canonical, link_info.Splicing_Key, link_info.Splicing_Class, link_info.Is_Inframe])
 
             records.append(self.gene + '\t' + ';'.join(self.sample_list) + '\t' + print_link_info + '\t' + \
-                     ';'.join([str(x) for x in supporting_read_num]) + '\t' + str(round(float(self.score), 4)))
+                     ';'.join([str(x) for x in supporting_read_num]) + '\t' + str(round(self.score, 4)) + '\t' + str(round(self.fdr, 4)))
 
         return '\n'.join(records) 
 

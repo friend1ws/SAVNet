@@ -1,6 +1,6 @@
 #! /usr/bin/env python
 
-import copy, math
+import copy, math, random
 import math_utils
 from sav import Sav
 
@@ -124,7 +124,12 @@ class Network(object):
         return sav_list
                
  
-         
+    def execute_permutation(self, seed):
+
+        for mutation in self.mutation_status:
+            shuffled_samples = [seed[x] for x in self.mutation_status[mutation]]
+            self.mutation_status[mutation] = shuffled_samples
+
         
     def __link_effect_size_scan(self, pseudo_count = 0.1):
 
@@ -137,11 +142,11 @@ class Network(object):
             for sample_id in self.mutation_status[mut_id]:
                 mut_vector[sample_id] = 1
 
-            weight_sum_null = sum([float(weight_vector[j]) for j in range(sample_num) if mut_vector[j] == 0])
-            weight_sum_target = sum([float(weight_vector[j]) for j in range(sample_num) if mut_vector[j] == 1])
+            weight_sum_null = sum([float(self.weight_vector[j]) for j in range(self.sample_num) if mut_vector[j] == 0])
+            weight_sum_target = sum([float(self.weight_vector[j]) for j in range(self.sample_num) if mut_vector[j] == 1])
 
-            count_sum_null = sum([int(cur_splicing_count_vector[j]) for j in range(sample_num) if mut_vector[j] == 0])
-            count_sum_target = sum([int(cur_splicing_count_vector[j]) for j in range(sample_num) if mut_vector[j] == 1])
+            count_sum_null = sum([int(cur_splicing_count_vector[j]) for j in range(self.sample_num) if mut_vector[j] == 0])
+            count_sum_target = sum([int(cur_splicing_count_vector[j]) for j in range(self.sample_num) if mut_vector[j] == 1])
 
             mean_null = float(count_sum_null) / weight_sum_null if weight_sum_null > 0.0 and count_sum_null > 0 else 0.0
             mean_target = float(count_sum_target) / weight_sum_target if weight_sum_target > 0 and count_sum_target > 0 else 0.0
@@ -153,7 +158,7 @@ class Network(object):
     def __link_median_count_scan(self):
 
         # simple check for each link
-        for mut_id, sp_id in link_vector:
+        for mut_id, sp_id in self.link_vector:
             # cur_mut_id, cur_sp_id = self.link_vector[i]
             cur_splicing_count_vector = self.splicing_counts[sp_id]
 
@@ -163,7 +168,7 @@ class Network(object):
             for sample_id in self.mutation_status[mut_id]:
                 mut_vector[sample_id] = 1
 
-            self.link_vector2median_count[(mut_id, sp_id)] = math_utils.median([int(cur_splicing_count_vector[j]) for j in range(sample_num) if mut_vector[j] == 0])
+            self.link_vector2median_count[(mut_id, sp_id)] = math_utils.median([int(cur_splicing_count_vector[j]) for j in range(self.sample_num) if mut_vector[j] == 0])
     
 
     # simply cluster links by their topologies
@@ -193,7 +198,7 @@ class Network(object):
                 no_more_cluster = 1
                 for check_mut_id in remaining_ids:
                     if check_mut_id in clustered_ids: continue
-                    for cur_clustered_mut_id in clusteted_ids:
+                    for cur_clustered_mut_id in clustered_ids:
                         # check whether there is overlapping splicing aberrations
                         if len(set(mut_id2sp_id[cur_clustered_mut_id]) & set(mut_id2sp_id[check_mut_id])) > 0:
                             clustered_ids.append(check_mut_id)
@@ -272,8 +277,8 @@ if __name__ == "__main__":
     splicing_counts = [[0,0,0,2,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
                        [0,0,19,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
                        [0,0,3,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]]
-    link_vector = [(0, 0), (0, 1), (0, 2)]
-    sample_num = 26
+    # link_vector = [(0, 0), (0, 1), (0, 2)]
+    # sample_num = 26
     sample_list = ["A427", "A549", "ABC-1", "H1299", "H1437", "H1648", "H1650", "H1703", "H1819", 
                    "H1975", "H2126", "H2228", "H2347", "H322", "II-18", "LC2_ad", "PC-14", "PC-3", 
                    "PC-7", "PC-9", "RERF-LC-Ad1", "RERF-LC-Ad2", "RERF-LC-KJ", "RERF-LC-MS", "RERF-LC-OK", "VMRC-LCD"]
@@ -288,6 +293,7 @@ if __name__ == "__main__":
 
 
     network = Network("KDM5A", mutation_status, splicing_counts, link2info, sample_list, weight_vector)
+
     network.prune_link_vector(3.0)
 
 
