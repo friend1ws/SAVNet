@@ -1,7 +1,8 @@
 #! /usr/bin/env python
 
 import sys, subprocess, os
-import preprocess, utils, sample_conf
+import preprocess, analysis_network, sample_conf
+from sav import Sav
 
 def savnet_main(args):
 
@@ -13,6 +14,8 @@ def savnet_main(args):
     # read sample conf
     sconf = sample_conf.Sample_conf()
     sconf.parse_file(args.sample_list_file, args.sv)
+
+    """
 
     if args.sv == False:
         preprocess.merge_mut(sconf.mut_files, args.output_prefix + ".mut_merged.txt")
@@ -83,21 +86,52 @@ def savnet_main(args):
                                                 args.output_prefix + ".chimera_merged.associate.txt",
                                                 args.output_prefix + ".splicing.associate.txt")
 
-    utils.organize_mut_splicing_count2(args.output_prefix + ".splicing.associate.txt",
-                                       args.output_prefix + ".mut_merged.txt",
-                                       args.output_prefix + ".splicing_mutation.count_summary.txt",
-                                       args.output_prefix + ".splicing_mutation.link_info.txt")
-                                    # args.output_prefix + ".splicing_mutation.mut_info.txt", 
-                                    # args.output_prefix + ".splicing_mutation.splicing_info.txt")
+    """
+
+    analysis_network.create_network_list(args.output_prefix + ".splicing.associate.txt", 
+                                         args.output_prefix + ".splicing_mutatoin.network.pickles",
+                                         args.output_prefix + ".mut_merged.txt",
+                                         sconf.sample_names, sconf.weights)
+
+
+    sav_list_target = analysis_network.extract_sav_list(args.output_prefix + ".splicing_mutatoin.network.pickles", args.effect_size_thres, args.log_BF_thres, 
+                                                        args.alpha0, args.beta0, args.alpha1, args.beta1, permutation = False)
+
+    sav_lists_permutation = []
+    for i in range(args.permutation_num):
+        temp_sav_list = analysis_network.extract_sav_list(args.output_prefix + ".splicing_mutatoin.network.pickles", args.effect_size_thres, args.log_BF_thres,
+                                                          args.alpha0, args.beta0, args.alpha1, args.beta1, permutation = True)
+        sav_lists_permutation.append(temp_sav_list)
  
+    analysis_network.add_qvalue_to_sav_list(sav_list_target, sav_lists_permutation)
+
+    with open(args.output_prefix + ".savnet.result.txt", 'w') as hout:
+        print >> hout, Sav.print_header_mut
+        for sav in sav_list_target:
+            print >> hout, '\n'.join(sav.print_records(with_fdr = True))
+
+    with open(args.output_prefix + ".splicing_mutation.count_summary.anno.perm_all.txt", 'w') as hout:
+        print >> hout, "Permutation_Num" + '\t' + Sav.print_header_mut
+        for i in range(len(sav_lists_permutation)):
+            for sav in sav_lists_permutation[i]:
+                print >> hout, '\n'.join([str(i) + '\t' + x for x in sav.print_records(with_fdr = False)])
+ 
+
     """
         utils.organize_mut_splicing_count(args.output_prefix + ".splicing.associate.txt",
                                     args.output_prefix + ".sv_merged.txt",
                                     args.output_prefix + ".splicing_mutation.count_summary.txt",
                                     args.output_prefix + ".splicing_mutation.mut_info.txt",
                                     args.output_prefix + ".splicing_mutation.splicing_info.txt", True)
+
+    utils.organize_mut_splicing_count2(args.output_prefix + ".splicing.associate.txt",
+                                       args.output_prefix + ".mut_merged.txt",
+                                       args.output_prefix + ".splicing_mutation.count_summary.txt",
+                                       args.output_prefix + ".splicing_mutation.link_info.txt")
     """
 
+
+    """
     # true combination    
     print >> sys.stderr, "evaluating true combinations"
 
@@ -113,13 +147,10 @@ def savnet_main(args):
                          args.output_prefix + ".splicing_mutation.count_summary.anno.txt",
                          sconf.sample_names,
                          args.output_prefix + ".splicing_mutation.link_info.txt")
-                         # args.output_prefix + ".splicing_mutation.mut_info.txt",
-                         # args.output_prefix + ".splicing_mutation.splicing_info.txt", args.sv)
 
 
     # permutation
     for i in range(args.permutation_num):
-    # for i in range(93, 100):
 
         print >> sys.stderr, "evaluating permutation " + str(i)
         utils.permute_mut_SJ_pairs(args.output_prefix + ".splicing_mutation.count_summary.txt",
@@ -138,19 +169,11 @@ def savnet_main(args):
                               sconf.sample_names,
                               args.output_prefix + ".splicing_mutation.link_info.txt")
 
-        # utils.add_annotation(args.output_prefix + ".splicing_mutation.count_summary.BIC.perm" + str(i) + ".txt",
-        #                      args.output_prefix + ".splicing_mutation.count_summary.anno.perm" + str(i) + ".txt",
-        #                      sconf.sample_names,
-        #                      args.output_prefix + ".splicing_mutation.mut_info.txt",
-        #                      args.output_prefix + ".splicing_mutation.splicing_info.txt", args.sv)
-
-
     utils.merge_perm_result(args.output_prefix + ".splicing_mutation.count_summary.anno.perm", 
                             args.output_prefix + ".splicing_mutation.count_summary.anno.perm_all.txt",
                             args.permutation_num)
 
     utils.calculate_q_value(args.output_prefix + ".splicing_mutation.count_summary.anno.txt",
-                            # args.output_prefix + ".splicing_mutation.count_summary.anno.perm",
                             args.output_prefix + ".splicing_mutation.count_summary.anno.perm_all.txt",
                             args.output_prefix + ".savnet.result.txt",
                             args.permutation_num, args.sv)
@@ -177,4 +200,6 @@ def savnet_main(args):
             subprocess.call(["rm", "-rf", args.output_prefix + ".splicing_mutation.count_summary.pruned.perm" + str(i) + ".txt"])
             subprocess.call(["rm", "-rf", args.output_prefix + ".splicing_mutation.count_summary.BIC.perm" + str(i) + ".txt"])
             subprocess.call(["rm", "-rf", args.output_prefix + ".splicing_mutation.count_summary.anno.perm" + str(i) + ".txt"])
+
+    """
 

@@ -2,6 +2,9 @@
 
 class Sav(object):
 
+    print_header_mut = '\t'.join(["Gene_Symbol", "Sample_Name", "Mutation_Key", "Motif_Pos", "Mutation_Type", "Is_Canonical",
+                                  "Splicing_Key", "Splicing_Class", "Is_Inframe", "Supporting_Read_Num", "Score", "Q_Value"])
+ 
     def __init__(self, gene, sample_list, link_info_vector, supporting_read_num_vector, score):
         self.gene = gene
         self.sample_list = sample_list
@@ -14,7 +17,7 @@ class Sav(object):
     def set_fdr(self, fdr):
         self.fdr = fdr
 
-    def print_records(self):
+    def print_records(self, with_fdr = True):
 
         records = []
         for i in range(self.link_num):
@@ -25,8 +28,15 @@ class Sav(object):
             print_link_info = '\t'.join([link_info.Mutation_Key, link_info.Motif_Pos, link_info.Mutation_Type,
                                          link_info.Is_Canonical, link_info.Splicing_Key, link_info.Splicing_Class, link_info.Is_Inframe])
 
-            records.append(self.gene + '\t' + ';'.join(self.sample_list) + '\t' + print_link_info + '\t' + \
-                     ';'.join([str(x) for x in supporting_read_num]) + '\t' + str(round(self.score, 4)) + '\t' + str(round(self.fdr, 4)))
+            temp_record = self.gene + '\t' + ';'.join(self.sample_list) + '\t' + print_link_info + '\t' + \
+                            ';'.join([str(x) for x in supporting_read_num]) + '\t' + str(round(self.score, 4))
 
-        return '\n'.join(records) 
+            if with_fdr:
+                temp_record = temp_record + '\t' + str(round(self.fdr, 4))
+            else:
+                temp_record = temp_record + '\t' + "---"
+
+            records.append(temp_record)
+
+        return records
 
