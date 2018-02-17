@@ -15,8 +15,6 @@ def savnet_main(args):
     sconf = sample_conf.Sample_conf()
     sconf.parse_file(args.sample_list_file, args.sv)
 
-    """
-
     if args.sv == False:
         preprocess.merge_mut(sconf.mut_files, args.output_prefix + ".mut_merged.txt")
     else:
@@ -86,7 +84,6 @@ def savnet_main(args):
                                                 args.output_prefix + ".chimera_merged.associate.txt",
                                                 args.output_prefix + ".splicing.associate.txt")
 
-    """
 
     analysis_network.create_network_list(args.output_prefix + ".splicing.associate.txt", 
                                          args.output_prefix + ".splicing_mutatoin.network.pickles",
@@ -115,7 +112,17 @@ def savnet_main(args):
         for i in range(len(sav_lists_permutation)):
             for sav in sav_lists_permutation[i]:
                 print >> hout, '\n'.join([str(i) + '\t' + x for x in sav.print_records(with_fdr = False)])
- 
+
+    if args.debug == False:
+
+        subprocess.call(["rm", "-rf", args.output_prefix + ".mut_merged.txt"])
+        subprocess.call(["rm", "-rf", args.output_prefix + ".SJ_merged.txt"])
+        subprocess.call(["rm", "-rf", args.output_prefix + ".SJ_merged.annot.txt"])
+        subprocess.call(["rm", "-rf", args.output_prefix + ".SJ_merged.associate.txt"])
+        subprocess.call(["rm", "-rf", args.output_prefix + ".IR_merged.txt"])
+        subprocess.call(["rm", "-rf", args.output_prefix + ".IR_merged.associate.txt"])
+        subprocess.call(["rm", "-rf", args.output_prefix + ".splicing.associate.txt"])
+        subprocess.call(["rm", "-rf", args.output_prefix + ".splicing_mutatoin.network.pickles"]) 
 
     """
         utils.organize_mut_splicing_count(args.output_prefix + ".splicing.associate.txt",
