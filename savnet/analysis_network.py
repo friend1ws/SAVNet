@@ -12,6 +12,7 @@ from network import Network
 from sav import Sav
 
 Link_info_mut = namedtuple("Link_info_mut", ("Mutation_Key", "Motif_Pos", "Mutation_Type", "Is_Canonical", "Splicing_Key", "Splicing_Class", "Is_Inframe"))
+Link_info_sv = namedtuple("Link_info_sv", ("SV_Key", "SV_Type", "Splicing_Key", "Splicing_Class", "Is_Inframe"))
 
 
 def get_mut_sample_info(mut_info, mut2sample):
@@ -89,10 +90,10 @@ def create_network_list(merged_candidate_link_list, network_pickles_file, mut2sa
                 temp_splicing_key2id = {}
     
             # get mutation id and splicing id
-            mutation_key = F[header2ind["Mutation_Key"]]
+            mutation_key = F[header2ind["Mutation_Key"]] if sv_mode == False else F[header2ind["SV_Key"]]
             if mutation_key not in temp_mutation_key2id:
                 temp_mutation_key2id[mutation_key] = temp_mut_id
-                temp_mutation_status[temp_mut_id] =  get_mut_sample_info(mutation_key, mut2sample)
+                temp_mutation_status[temp_mut_id] =  get_mut_sample_info(mutation_key, mut2sample) if sv_mode == False else mut2sample[mutation_key]
                 temp_mut_id = temp_mut_id + 1
 
             splicing_key = F[header2ind["Splicing_Key"]]
@@ -105,15 +106,23 @@ def create_network_list(merged_candidate_link_list, network_pickles_file, mut2sa
             link = (temp_mutation_key2id[mutation_key], temp_splicing_key2id[splicing_key])
 
             ###
-            # This procedure is for mutation. Procedure for SV is also required
-            mutation_key = F[header2ind["Mutation_Key"]]
-            motif_pos = F[header2ind["Motif_Pos"]]
-            mutation_type = F[header2ind["Mutation_Type"]]
-            is_canonical = F[header2ind["Is_Canonical"]]
-            splicing_class = F[header2ind["Splicing_Class"]]
-            is_inframe = F[header2ind["Is_Inframe"]]
+            if sv_mode == False:
+                # This procedure is for mutation. Procedure for SV is also required
+                mutation_key = F[header2ind["Mutation_Key"]]
+                motif_pos = F[header2ind["Motif_Pos"]]
+                mutation_type = F[header2ind["Mutation_Type"]]
+                is_canonical = F[header2ind["Is_Canonical"]]
+                splicing_class = F[header2ind["Splicing_Class"]]
+                is_inframe = F[header2ind["Is_Inframe"]]
 
-            temp_link2info[link] = Link_info_mut(mutation_key, motif_pos, mutation_type, is_canonical, splicing_key, splicing_class, is_inframe)
+                temp_link2info[link] = Link_info_mut(mutation_key, motif_pos, mutation_type, is_canonical, splicing_key, splicing_class, is_inframe)
+            else:
+                mutation_key = F[header2ind["SV_Key"]]
+                sv_type = F[header2ind["SV_Type"]]
+                splicing_class = F[header2ind["Splicing_Class"]]
+                is_inframe = F[header2ind["Is_Inframe"]]
+
+                temp_link2info[link] = Link_info_sv(mutation_key, sv_type, splicing_key, splicing_class, is_inframe)
             ###
 
 

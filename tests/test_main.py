@@ -72,7 +72,7 @@ class TestMain(unittest.TestCase):
         savnet.run.savnet_main(args)
 
         self.assertTrue(317 <= len(open(tmp_dir + "/test.savnet.result.txt", 'r').readlines()) <= 327)
-        shutil.rmtree(tmp_dir)
+        # shutil.rmtree(tmp_dir)
 
 
     def test2(self):
