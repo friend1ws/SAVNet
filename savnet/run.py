@@ -136,7 +136,7 @@ def savnet_main(args):
     logging.info("Adding Q-values to splicing associated variants.")
     analysis_network.add_qvalue_to_sav_list(sav_list_target, sav_lists_permutation)
 
-    gging.info("Generating the final outputs.")
+    logging.info("Generating the final outputs.")
     with open(args.output_prefix + ".savnet.result.txt", 'w') as hout:
         if args.sv == False:
             print >> hout, Sav.print_header_mut 
