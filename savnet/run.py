@@ -3,12 +3,19 @@
 import sys, subprocess, os
 import preprocess, analysis_network, sample_conf
 from sav import Sav
+from utils import is_tool
 
 def savnet_main(args):
 
     output_prefix_dir = os.path.dirname(args.output_prefix)
     if output_prefix_dir != "" and not os.path.exists(output_prefix_dir):
        os.makedirs(output_prefix_dir)
+
+    ##########
+    # check if the executables exist
+    is_tool("bedtools")
+    is_tool("tabix")
+    is_tool("bgzip")
 
     ##########
     # read sample conf

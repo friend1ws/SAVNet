@@ -1,7 +1,7 @@
 #! /usr/bin/env python
 
 import copy, math, random
-import math_utils
+import utils
 from sav import Sav
 
 class Network(object):
@@ -69,7 +69,7 @@ class Network(object):
                 mut2log_BF[mut_id] = float("-inf")
 
 
-            for conf in sorted(math_utils.generate_configurations(conf_dim)):
+            for conf in sorted(utils.generate_configurations(conf_dim)):
 
                 # get active mutation in the configuration in consideration
                 active_mut_list = []
@@ -93,7 +93,7 @@ class Network(object):
 
             for mut_id in mut2log_ML_null:
 
-                self.mut2log_BF[mut_id] = math_utils.soft_max(mut2log_ML_nonnull[mut_id]) - math_utils.soft_max(mut2log_ML_null[mut_id]) - \
+                self.mut2log_BF[mut_id] = utils.soft_max(mut2log_ML_nonnull[mut_id]) - utils.soft_max(mut2log_ML_null[mut_id]) - \
                                             math.log(len(mut2log_ML_nonnull[mut_id])) + math.log(len(mut2log_ML_null[mut_id]))
 
                 max_conf = mut2conf_max[mut_id]
@@ -168,7 +168,7 @@ class Network(object):
             for sample_id in self.mutation_status[mut_id]:
                 mut_vector[sample_id] = 1
 
-            self.link_vector2median_count[(mut_id, sp_id)] = math_utils.median([int(cur_splicing_count_vector[j]) for j in range(self.sample_num) if mut_vector[j] == 0])
+            self.link_vector2median_count[(mut_id, sp_id)] = utils.median([int(cur_splicing_count_vector[j]) for j in range(self.sample_num) if mut_vector[j] == 0])
     
 
     # simply cluster links by their topologies
