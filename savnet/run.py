@@ -10,11 +10,19 @@ logging.basicConfig(format='%(asctime)s %(message)s', datefmt="%Y-%m-%d %I:%M:%S
 def savnet_main(args):
 
     ##########
+    # read sample conf
+    sconf = sample_conf.Sample_conf()
+    sconf.parse_file(args.sample_list_file, args.sv)
+
+    ##########
     # check if the executables exist
     is_tool("bedtools")
     is_tool("tabix")
     is_tool("bgzip")
-
+    if len(sconf.SJ_files) > 0: is_tool("junc_utils")
+    if len(sconf.IR_files) > 0: is_tool("intron_retention_utils")
+    if len(sconf.chimera_files) > 0: is_tool("chimera_utils")
+    
     ##########
     output_prefix_dir = os.path.dirname(args.output_prefix)
     if output_prefix_dir != "" and not os.path.exists(output_prefix_dir):
@@ -22,10 +30,6 @@ def savnet_main(args):
 
 
     ##########
-    # read sample conf
-    sconf = sample_conf.Sample_conf()
-    sconf.parse_file(args.sample_list_file, args.sv)
-
     logging.info("Merging mutation data.")
     if args.sv == False:
         preprocess.merge_mut(sconf.mut_files, args.output_prefix + ".mut_merged.txt")
@@ -136,7 +140,7 @@ def savnet_main(args):
     logging.info("Adding Q-values to splicing associated variants.")
     analysis_network.add_qvalue_to_sav_list(sav_list_target, sav_lists_permutation)
 
-    logging.info("Generating the final outputs.")
+    logging.info("Generating final outputs.")
     with open(args.output_prefix + ".savnet.result.txt", 'w') as hout:
         if args.sv == False:
             print >> hout, Sav.print_header_mut 
