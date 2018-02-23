@@ -12,6 +12,7 @@ before_script:
   - pip install pysam
   - pip install junc_utils
   - pip install intron_retention_utils
+  - pip install chimera_utils
 
 script:
   - pip install .
