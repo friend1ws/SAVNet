@@ -24,6 +24,10 @@ class TestMain(unittest.TestCase):
                        cur_dir + "/resource/mutation.tar.gz")
         extract_tar_gz(cur_dir + "/resource/mutation.tar.gz", cur_dir + "/resource")
 
+        check_download("https://storage.googleapis.com/friend1ws_package_data/savnet/sv.tar.gz", \
+                       cur_dir + "/resource/sv.tar.gz")
+        extract_tar_gz(cur_dir + "/resource/sv.tar.gz", cur_dir + "/resource")
+
         check_download("https://storage.googleapis.com/friend1ws_package_data/savnet/junction.tar.gz", \
                        cur_dir + "/resource/junction.tar.gz")
         extract_tar_gz(cur_dir + "/resource/junction.tar.gz", cur_dir + "/resource")
@@ -31,6 +35,10 @@ class TestMain(unittest.TestCase):
         check_download("https://storage.googleapis.com/friend1ws_package_data/savnet/intron_retention.tar.gz", \
                        cur_dir + "/resource/intron_retention.tar.gz")
         extract_tar_gz(cur_dir + "/resource/intron_retention.tar.gz", cur_dir + "/resource")
+
+        check_download("https://storage.googleapis.com/friend1ws_package_data/savnet/chimera.tar.gz", \
+                       cur_dir + "/resource/chimera.tar.gz") 
+        extract_tar_gz(cur_dir + "/resource/chimera.tar.gz", cur_dir + "/resource")
 
         check_download("https://storage.googleapis.com/friend1ws_package_data/savnet/qc.tar.gz", \
                        cur_dir + "/resource/qc.tar.gz")
