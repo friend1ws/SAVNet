@@ -30,8 +30,7 @@ setup(
     packages = find_packages(exclude = ['tests']),
     package_data={'sv_utils': ['data/*']},
 
-    install_requires = ["annot_utils", "pysam", "junc_utils", "intron_retention_utils", "chimera_utils"]
-    install_requires = [],
+    install_requires = ["annot_utils", "pysam", "junc_utils", "intron_retention_utils", "chimera_utils"],
     entry_points = {'console_scripts': ['savnet = savnet:main']}
 
 )
