@@ -1,4 +1,0 @@
-Splicing Junction
-=================
-
-Junction-mon

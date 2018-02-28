@@ -12,10 +12,8 @@ Welcome to SAVNet's documentation!
 
    install
    quick_start
-   junction
-   intron_retention
+   input
    result
-   docker
 
 Indices and tables
 ==================
