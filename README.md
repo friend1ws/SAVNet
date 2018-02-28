@@ -9,4 +9,4 @@ SAVNet is a software for extracting splicing associated variants (SAVs) from som
 
 ## Documentation
 
-The documentation for SAVNet is available [here](http://savnet.readthedocs.io/en/latest/index.html) on [ReadTheDocs](https://readthedocs.org). 
+The documentation for SAVNet is available [here](http://savnet.readthedocs.io/en/latest/index.html).
