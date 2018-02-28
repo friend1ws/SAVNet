@@ -10,7 +10,8 @@ Welcome to SAVNet's documentation!
    :maxdepth: 2
    :caption: Contents:
 
-   quick_start
+   install
+   quick_start
    junction
    intron_retention
    result
