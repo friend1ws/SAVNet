@@ -5,8 +5,7 @@
 
 ## Introduction
 
- software for extracting splicing associated variants (SAVs) from somatic mutation, splicing junction and intron retention data. 
- This software has been used for large-scale exome-transcriptome sequence analysis (see our [preprint](https://www.biorxiv.org/content/early/2017/09/28/162560)).
+SAVNet is a software for extracting splicing associated variants (SAVs) from somatic mutation, splicing junction and intron retention data. This software has been used for large-scale exome-transcriptome sequence analysis (see our [preprint](https://www.biorxiv.org/content/early/2017/09/28/162560)).
 
 ## Documentation
 
