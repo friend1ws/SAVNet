@@ -8,11 +8,6 @@ before_script:
   - wget https://github.com/arq5x/bedtools2/releases/download/v2.27.0/bedtools-2.27.0.tar.gz
   - tar zxvf bedtools-2.27.0.tar.gz
   - cd bedtools2 && make && export PATH=$PATH:$PWD/bin && cd ..
-  - pip install annot_utils
-  - pip install pysam
-  - pip install junc_utils
-  - pip install intron_retention_utils
-  - pip install chimera_utils
 
 script:
   - pip install .
