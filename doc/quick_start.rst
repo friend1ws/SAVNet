@@ -1,6 +1,7 @@
 Quick Start
 ===========
 
+Here, we use somatic mutations, splicing junctions and intron retentions collected from 26 lung cellline 
 1. Change the directory to the workspace for this quick start
 
 .. code-block:: bash
@@ -8,9 +9,7 @@ Quick Start
   cd savnet_quick_start
   
 
-2. Download the somatic mutation, splicing junction, intron retention, rna-seq quality control
-collected from 26 lung cell-line whole genome and transcriptome sequencing data. 
-Also download the reference genome file used to generate these files.
+2. Download the necessary resources for savnet. 
 
 .. code-block:: bash
   # Somatic mutation 
