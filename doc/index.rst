@@ -10,6 +10,7 @@ Welcome to SAVNet's documentation!
    :maxdepth: 2
    :caption: Contents:
 
+   about
    install
    quick_start
    input
