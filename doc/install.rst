@@ -46,13 +46,15 @@ Next, install the savnet package using ``pip``
 
 Then, other dependent python packages
 (``pysam``, ``annot_utils``, ``junc_utils``, ``intron_retention_utils``, ``chimera_utils``)
-will also installed.
-You may want to add the option ``--user`` depending on the environment.
-To confirm successful installation type:
+will also be installed.
+If you are using shared computational environment where you do not have root account,
+you may want to add the option ``--user``.
 
-.. clode-block:: bash
+To confirm successful installation, please type:
 
-  % savnet --Version
+.. code-block:: bash
+
+  % savnet --version
 
   # Following messages will appear
   savnet-0.3.0b1
@@ -63,4 +65,4 @@ you can directly use the savnet through docker.
 
 .. code-block:: bash
 
-  % docker run friend1ws/savnet:0.3.0 -h
+  % docker run friend1ws/savnet:0.3.0 --version
