@@ -115,29 +115,37 @@ def make_savnet_input_sv(output_file, sv_dir, sj_dir, ir_dir, chimera_dir, qc_di
 
 if __name__ == "__main__":
 
-    """
-    import sys
+    import argparse
 
-    output_file = sys.argv[1]
-    mut_dir = sys.argv[2]
-    sj_dir = sys.argv[3]
-    ir_dir = sys.argv[4]
-    qc_dir = sys.argv[5]
+    parser = argparse.ArgumentParser("make_savnet_input")
 
-    make_savnet_input(output_file, mut_dir, sj_dir, ir_dir, qc_dir)
-    """
+    parser.add_argument("--sample_list_file", default = None, required = True, type = str)
 
-    import sys
+    parser.add_argument("--sv", default = False, action = 'store_true',
+                        help = "Make SAVNet input for structural variation mode")
+
+    parser.add_argument("--mut_dir", default = None, required = True, type = str,
+                        help = "The directory path to mutation or sv files")
+
+    parser.add_argument("--sj_dir", default = None, type = str,
+                        help = "The directory path to splicing junction files")
     
-    output_file = sys.argv[1]
-    sv_dir = sys.argv[2]
-    sj_dir = sys.argv[3]
-    ir_dir = sys.argv[4]
-    chimera_dir = sys.argv[5]
-    qc_dir = sys.argv[6]
-    
-    make_savnet_input_sv(output_file, sv_dir, sj_dir, ir_dir, chimera_dir, qc_dir)
+    parser.add_argument("--ir_dir", default = None, type = str,
+                        help = "The directory path to intron retention files")
 
+    parser.add_argument("--chimera_dir", default = None, type = str,
+                        help = "The directory path to chimeric count files")
 
+    parser.add_argument("--qc_dir", default = None, type = str,
+                        help = "The directory path to quality control files")
+
+    args = parser.parse_args()
+
+    if args.sv:
+        make_savnet_input_sv(args.sample_list_file, args.mut_dir, 
+                             args.sj_dir, args.ir_dir, args.chimera_dir, args.qc_dir)
+    else:
+        make_savnet_input(args.sample_list_file, args.mut_dir, 
+                          args.sj_dir, args.ir_dir, args.qc_dir)
 
 
