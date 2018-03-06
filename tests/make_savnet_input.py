@@ -16,7 +16,7 @@ def get_weight(log_final_file):
 
 def make_savnet_input(output_file, mut_dir, sj_dir, ir_dir, qc_dir):
  
-    mut_files = glob.glob(mut_dir + "/*.mutation.txt")
+    mut_files = glob.glob(mut_dir + "/*.mutation.txt") + glob.glob(mut_dir + "/*.mutation.vcf")
     sj_files = glob.glob(sj_dir + "/*.SJ.out.tab") 
     ir_files = glob.glob(ir_dir + "/*.genomonIR.result.txt")
     qc_files = glob.glob(qc_dir + "/*.Log.final.out")
@@ -24,7 +24,9 @@ def make_savnet_input(output_file, mut_dir, sj_dir, ir_dir, qc_dir):
 
     sample2mut_file = {}
     for mut_file in sorted(mut_files):
-        sample = os.path.basename(mut_file).replace(".mutation.txt", "")
+        sample = os.path.basename(mut_file)
+        sample = sample.replace(".mutation.txt", "")
+        sample = sample.replace(".mutation.vcf", "")
         sample = sample[:15]
         sample2mut_file[sample] = os.path.abspath(mut_file)
 

@@ -71,7 +71,7 @@ def savnet_main(args):
     logging.info("Checking association betweeen mutation and intron retention data.")
     if args.sv == False:
         associate_commands = ["intron_retention_utils", "associate", args.output_prefix + ".IR_merged.txt",
-                              args.output_prefix + ".mut_merged.txt", args.output_prefix + ".IR_merged.associate.txt",
+                              args.output_prefix + ".mut_merged.vcf", args.output_prefix + ".IR_merged.associate.txt",
                               "--donor_size", args.donor_size, "--acceptor_size", args.acceptor_size]
     else:
         associate_commands = ["intron_retention_utils", "associate", args.output_prefix + ".IR_merged.txt",
@@ -106,7 +106,7 @@ def savnet_main(args):
         logging.info("Creating pickles of splicing association network instances.")
         analysis_network.create_network_list(args.output_prefix + ".splicing.associate.txt",
                                              args.output_prefix + ".splicing_mutatoin.network.pickles",
-                                             args.output_prefix + ".mut_merged.txt",
+                                             args.output_prefix + ".mut_merged.vcf",
                                              sconf.sample_names, sconf.weights)
 
     else:
@@ -158,7 +158,7 @@ def savnet_main(args):
 
     if args.debug == False:
 
-        subprocess.call(["rm", "-rf", args.output_prefix + ".mut_merged.txt"])
+        subprocess.call(["rm", "-rf", args.output_prefix + ".mut_merged.vcf"])
         subprocess.call(["rm", "-rf", args.output_prefix + ".sv_merged.txt"])
         subprocess.call(["rm", "-rf", args.output_prefix + ".SJ_merged.txt"])
         subprocess.call(["rm", "-rf", args.output_prefix + ".SJ_merged.annot.txt"])

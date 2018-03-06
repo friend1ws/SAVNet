@@ -86,6 +86,35 @@ class TestMain(unittest.TestCase):
         cur_dir = os.path.dirname(os.path.abspath(__file__))
         tmp_dir = tempfile.mkdtemp()
 
+        make_savnet_input(cur_dir + "/resource/savnet_input_vcf.txt", \
+                          cur_dir + "/resource/mutation_vcf", \
+                          cur_dir + "/resource/junction", \
+                          cur_dir + "/resource/intron_retention", \
+                          cur_dir + "/resource/qc")
+
+        sample_list_file = cur_dir + "/resource/savnet_input_vcf.txt"
+        output_prefix = tmp_dir + "/test"
+        sj_control_file = cur_dir + "/resource/control/SJ_control_2_4.bed.gz"
+        ir_control_file = cur_dir + "/resource/control/IR_control_4.bed.gz"
+
+
+        savnet_args = [sample_list_file, output_prefix, \
+                           "--SJ_pooled_control_file", sj_control_file, \
+                           "--IR_pooled_control_file", ir_control_file, "--grc"]
+        print "savnet" + ' ' + ' '.join(savnet_args)
+
+        args = self.parser.parse_args(savnet_args)
+        savnet.run.savnet_main(args)
+
+        self.assertTrue(317 <= len(open(tmp_dir + "/test.savnet.result.txt", 'r').readlines()) <= 327)
+        shutil.rmtree(tmp_dir)
+
+
+    def test3(self):
+
+        cur_dir = os.path.dirname(os.path.abspath(__file__))
+        tmp_dir = tempfile.mkdtemp()
+
         print >> sys.stderr, "Creating sample list file for SAVNET."
         make_savnet_input(cur_dir + "/resource/savnet_input.txt", \
                           cur_dir + "/resource/mutation", \
@@ -117,7 +146,7 @@ class TestMain(unittest.TestCase):
         shutil.rmtree(tmp_dir)
 
 
-    def test3(self):
+    def test4(self):
 
         cur_dir = os.path.dirname(os.path.abspath(__file__))
         tmp_dir = tempfile.mkdtemp()
@@ -135,7 +164,7 @@ class TestMain(unittest.TestCase):
         sj_control_file = cur_dir + "/resource/control/SJ_control_2_4.bed.gz"
         ir_control_file = cur_dir + "/resource/control/IR_control_4.bed.gz"
 
-        savnet_args = [sample_list_file, output_prefix, ref_genome, "--sv", \
+        savnet_args = [sample_list_file, output_prefix, "--sv", \
                            "--SJ_pooled_control_file", sj_control_file, \
                            "--IR_pooled_control_file", ir_control_file, "--grc"]
         print "savnet" + ' ' + ' '.join(savnet_args)
