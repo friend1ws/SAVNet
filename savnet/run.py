@@ -28,11 +28,10 @@ def savnet_main(args):
     if output_prefix_dir != "" and not os.path.exists(output_prefix_dir):
        os.makedirs(output_prefix_dir)
 
-
     ##########
     logging.info("Merging mutation data.")
     if args.sv == False:
-        preprocess.merge_mut(sconf.mut_files, args.output_prefix + ".mut_merged.txt")
+        preprocess.merge_mut2(sconf.mut_files, args.output_prefix + ".mut_merged.vcf", args.reference)
     else:
         preprocess.merge_sv(sconf.sv_files, args.output_prefix + ".sv_merged.txt")
 
@@ -49,9 +48,9 @@ def savnet_main(args):
 
     logging.info("Checking association betweeen mutation and splicing junction data.")
     if args.sv == False:
-        associate_commands = ["junc_utils", "associate", args.output_prefix + ".SJ_merged.annot.txt", args.output_prefix + ".mut_merged.txt",
-                              args.output_prefix + ".SJ_merged.associate.txt", "--reference", args.reference_genome,
-                              "--mutation_format", "anno", "--donor_size", args.donor_size, "--acceptor_size", args.acceptor_size,
+        associate_commands = ["junc_utils", "associate", args.output_prefix + ".SJ_merged.annot.txt", args.output_prefix + ".mut_merged.vcf",
+                              args.output_prefix + ".SJ_merged.associate.txt",
+                              "--donor_size", args.donor_size, "--acceptor_size", args.acceptor_size,
                               "--genome_id", args.genome_id]
         # if args.branchpoint: associate_commands.append("--branchpoint")
         if args.grc: associate_commands.append("--grc")
@@ -73,7 +72,6 @@ def savnet_main(args):
     if args.sv == False:
         associate_commands = ["intron_retention_utils", "associate", args.output_prefix + ".IR_merged.txt",
                               args.output_prefix + ".mut_merged.txt", args.output_prefix + ".IR_merged.associate.txt",
-                              "--reference", args.reference_genome, "--mutation", "anno",
                               "--donor_size", args.donor_size, "--acceptor_size", args.acceptor_size]
     else:
         associate_commands = ["intron_retention_utils", "associate", args.output_prefix + ".IR_merged.txt",
@@ -96,7 +94,6 @@ def savnet_main(args):
 
         subprocess.check_call(associate_commands)
     ##########
-
 
     ##########
     # organize association

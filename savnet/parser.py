@@ -25,7 +25,7 @@ def create_parser():
     parser.add_argument("--genome_id", choices = ["hg19", "hg38", "mm10"], default = "hg19",
                         help = "the genome id used for selecting UCSC-GRC chromosome name corresponding files (default: %(default)s)")
 
-    parser.add_argument("reference_genome", metavar = "reference.fa", default = None, type = str,
+    parser.add_argument("--reference", metavar = "reference.fa", default = None, type = str,
                         help = "the path to the reference genome sequence")
 
     parser.add_argument("--sv", action='store_true',

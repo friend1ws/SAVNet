@@ -69,7 +69,7 @@ class TestMain(unittest.TestCase):
         ir_control_file = cur_dir + "/resource/control/IR_control_4.bed.gz"
 
 
-        savnet_args = [sample_list_file, output_prefix, ref_genome, \
+        savnet_args = [sample_list_file, output_prefix, "--reference", ref_genome, \
                            "--SJ_pooled_control_file", sj_control_file, \
                            "--IR_pooled_control_file", ir_control_file, "--grc"]
         print "savnet" + ' ' + ' '.join(savnet_args)
@@ -105,7 +105,7 @@ class TestMain(unittest.TestCase):
         ir_control_file = cur_dir + "/resource/control/IR_control_4.bed.gz"
 
 
-        savnet_args = [sample_list_file, output_prefix, ref_genome, \
+        savnet_args = [sample_list_file, output_prefix, "--reference", ref_genome, \
                            "--SJ_pooled_control_file", sj_control_file, \
                            "--IR_pooled_control_file", ir_control_file, "--grc"]
         print "savnet" + ' ' + ' '.join(savnet_args)

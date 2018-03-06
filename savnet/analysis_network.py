@@ -40,8 +40,9 @@ def create_network_list(merged_candidate_link_list, network_pickles_file, mut2sa
         with open(mut2sample_file, 'r') as hin:
             for line in hin:
                 F = line.rstrip('\n').split('\t')
-                mut = '\t'.join(F[0:5])
-                mut2sample[mut] = [int(x) - 1 for x in F[5].split(',')]
+                # mut = '\t'.join(F[0:5])
+                mut = ','.join([F[0], F[1], F[3], F[4]])
+                mut2sample[mut] = [int(x) - 1 for x in F[8].split(',')]
     else:
         with open(mut2sample_file, 'r') as hin:
             for line in hin:
@@ -93,7 +94,8 @@ def create_network_list(merged_candidate_link_list, network_pickles_file, mut2sa
             mutation_key = F[header2ind["Mutation_Key"]] if sv_mode == False else F[header2ind["SV_Key"]]
             if mutation_key not in temp_mutation_key2id:
                 temp_mutation_key2id[mutation_key] = temp_mut_id
-                temp_mutation_status[temp_mut_id] =  get_mut_sample_info(mutation_key, mut2sample) if sv_mode == False else mut2sample[mutation_key]
+                # temp_mutation_status[temp_mut_id] =  get_mut_sample_info(mutation_key, mut2sample) if sv_mode == False else mut2sample[mutation_key]
+                temp_mutation_status[temp_mut_id] = mut2sample[mutation_key]
                 temp_mut_id = temp_mut_id + 1
 
             splicing_key = F[header2ind["Splicing_Key"]]

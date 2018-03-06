@@ -338,6 +338,68 @@ def merge_mut(mutation_file_list, output_file):
     hout.close()
 
 
+def merge_mut2(mutation_file_list, output_file, reference):
+
+
+    mut2sample = {}
+    sample_ind = 0
+    for mut_file in mutation_file_list:
+        sample_ind = sample_ind + 1
+        is_vcf = True if mut_file.endswith(".vcf") or mut_file.endswith(".vcf.gz") else False
+        hin2 = gzip.open(mut_file, 'r') if mut_file.endswith(".gz") else open(mut_file, 'r')
+
+        for line2 in hin2:
+            F2 = line2.rstrip('\n').split('\t')
+            if F2[0].startswith('#'): continue
+            if F2[0] == "Chr": continue
+
+            if is_vcf == False:
+                pos, ref, alt = F2[1], F2[3], F2[4]
+        
+                # insertion
+                if F2[3] == "-":
+                    # get the sequence for the reference base
+                    seq = ""    
+                    for item in pysam.faidx(reference, F2[0] + ":" + str(F2[1]) + "-" + str(F2[1])):
+                        seq = seq + item.rstrip('\n')
+                    seq = seq.replace('>', '')
+                    seq = seq.replace(F2[0] + ":" + str(F2[1]) + "-" + str(F2[1]), '')
+                    ref, alt = seq, seq + F2[4]
+
+                # deletion
+                if F2[4] == "-":
+                    # get the sequence for the reference base
+                    seq = ""    
+                    for item in pysam.faidx(reference, F2[0] + ":" + str(int(F2[1]) - 1) + "-" + str(int(F2[1]) - 1)):
+                        seq = seq + item.rstrip('\n')
+                    seq = seq.replace('>', '')
+                    seq = seq.replace(F2[0] + ":" + str(int(F2[1]) - 1) + "-" + str(int(F2[1]) - 1), '')
+                    pos, ref, alt = str(int(F2[1]) - 1), seq + F2[3], seq
+
+                QUAL = 60
+                INFO = "SOMATIC"
+
+                key = '\t'.join([F2[0], pos, '.', ref, alt, str(QUAL), "PASS", INFO])
+
+            else:
+
+                key = '\t'.join(F2[0:8])
+
+            if key not in mut2sample:
+                mut2sample[key] = []
+
+            mut2sample[key].append(str(sample_ind))
+
+    sample_num = sample_ind
+
+    hout = open(output_file, 'w')
+    for mut in sorted(mut2sample):
+        if len(mut2sample[mut]) == sample_num: continue
+        print >> hout, mut + '\t' + ','.join(mut2sample[mut])
+
+    hout.close()
+
+
 def merge_sv(sv_file_list, output_file):
 
     sv2sample = {}
