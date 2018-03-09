@@ -82,7 +82,7 @@ class TestMain(unittest.TestCase):
         savnet.run.savnet_main(args)
 
         self.assertTrue(317 <= len(open(tmp_dir + "/test.savnet.result.txt", 'r').readlines()) <= 327)
-        shutil.rmtree(tmp_dir)
+        # shutil.rmtree(tmp_dir)
 
 
     def test2(self):
@@ -121,7 +121,7 @@ class TestMain(unittest.TestCase):
 
         print >> sys.stderr, "Creating sample list file for SAVNET."
         make_savnet_input(cur_dir + "/resource/savnet_input.txt", \
-                          cur_dir + "/resource/mutation", \
+                          cur_dir + "/resource/mutation_vcf", \
                           cur_dir + "/resource/junction", \
                           cur_dir + "/resource/intron_retention", \
                           cur_dir + "/resource/qc")
