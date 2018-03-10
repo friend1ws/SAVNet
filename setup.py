@@ -10,7 +10,7 @@ with open(path.join(here, 'README.md'), encoding='utf-8') as f:
     long_description = f.read()
 
 def get_version():
-    with open(path.join(here, "junc_utils/version.py"), encoding = 'utf-8') as hin:
+    with open(path.join(here, "savnet/version.py"), encoding = 'utf-8') as hin:
         for line in hin:
             if line.startswith("__version__"):
                 version = line.partition('=')[2]
