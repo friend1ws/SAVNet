@@ -2,12 +2,13 @@
 
 from run import *
 import argparse
+from version import __version__
 
 def create_parser():
 
     parser = argparse.ArgumentParser(prog = "savnet")
 
-    parser.add_argument("--version", action = "version", version = "savnet-0.3.0b1")
+    parser.add_argument("--version", action = "version", version = "%(prog)s " + __version__)
 
     parser.add_argument("sample_list_file", metavar = "sample_list.txt", default = None, type = str,
                         help = "tab-delimited file of the cohort. \
