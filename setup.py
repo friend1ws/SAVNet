@@ -35,7 +35,7 @@ setup(
         'Topic :: Scientific/Engineering :: Bio-Informatics'
     ],
 
-    packages = find_packages(exclude = ['tests']),
+    packages = find_packages(exclude = ['tests', 'doc', 'docker']),
     package_data={'sv_utils': ['data/*']},
 
     install_requires = ["annot_utils>=0.2.0", "pysam>=0.9.0", "junc_utils>=0.4.0", "intron_retention_utils>=0.5.0", "chimera_utils>=0.5.0"],
