@@ -76,7 +76,7 @@ When using Annovar input file format file (optional):
 
 .. code-block:: bash
 
-  % python make_savnet_input.py --sample_list_file savnet.input.anno.txt --mut_dir mutation_vcf --sj_dir junction --ir_dir intron_retention --qc_dir qc
+  % python make_savnet_input.py --sample_list_file savnet.input.anno.txt --mut_dir mutation_anno --sj_dir junction --ir_dir intron_retention --qc_dir qc
 
   #
   # Following keys will be shown
@@ -112,3 +112,13 @@ When using Annovar input file format file (optional):
 .. code-block:: bash
 
   % cat lung_cellline/lung_cellline.savnet.result.txt
+
+  #
+  # Following keys will be shown 
+  #
+
+  Gene_Symbol     Sample_Name     Mutation_Key    Motif_Pos       Mutation_Type   Is_Canonical    Splicing_Key    Splicing_Class  Is_Inframe      Supporting_Read_Num     Score   Q_Value
+  ABCC9   RERF-LC-Ad1     12,21981996,T,A 12:21981994-21982000,-  Acceptor disruption     Canonical       12:21981983-21991011    Alternative 3'SS        In-frame        34      100.2136        0.0247
+  ABCD4   RERF-LC-Ad1     14,74754513,C,G 14:74754507-74754515,-  Donor disruption        Non-canonical   14:74753520-74754520    Alternative 5'SS        ---     102     300.2769        0.02
+  ABCD4   RERF-LC-Ad1     14,74754513,C,G 14:74754507-74754515,-  Donor disruption        Non-canonical   14:74753520-74754909    Exon skipping   ---     3       300.2769        0.02
+  ABLIM3  H1648   5,148630908,T,A 5:148630904-148630910,+ Acceptor creation       Canonical       5:148630068-148630908   Alternative 3'SS        In-frame        5       11.323  0.051
