@@ -31,7 +31,5 @@ RUN pip install annot_utils==0.2.0
 RUN pip install junc_utils==0.4.0
 RUN pip install intron_retention_utils==0.5 
 RUN pip install chimera_utils==0.5.0
-RUN pip install savnet==0.3.0b1
-
-
+RUN pip install savnet==0.3.0
 
