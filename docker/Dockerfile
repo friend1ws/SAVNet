@@ -8,6 +8,10 @@ RUN apt-get update && apt-get install -y \
     make \
     gcc \
     zlib1g-dev \
+    libbz2-dev \
+    liblzma-dev \
+    libcurl4-openssl-dev \
+    libssl-dev \
     python \
     python-pip
 
@@ -17,11 +21,17 @@ RUN wget https://github.com/samtools/htslib/releases/download/1.7/htslib-1.7.tar
 
 RUN wget https://github.com/arq5x/bedtools2/releases/download/v2.27.0/bedtools-2.27.0.tar.gz && \
     tar -zxvf bedtools-2.27.0.tar.gz && \
-    cd bedtools-2 && make && make install
+    cd bedtools2 && make && make install
 
 RUN pip install --upgrade pip
 RUN pip install --upgrade setuptools
 
-RUN pip install savnet
+RUN pip install pysam==0.13
+RUN pip install annot_utils==0.2.0
+RUN pip install junc_utils==0.4.0
+RUN pip install intron_retention_utils==0.5 
+RUN pip install chimera_utils==0.5.0
+RUN pip install savnet==0.3.0b1
+
 
 
