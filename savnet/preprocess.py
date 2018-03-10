@@ -472,7 +472,7 @@ def merge_SJ_IR_files(SJ_input_file, IR_input_file, output_file):
         for line in hin:
             F = line.rstrip('\n').split('\t')
             splicing_key = F[header2ind["Chr"]] + ':' + F[header2ind["Boundary_Pos"]] + '-' + F[header2ind["Boundary_Pos"]]
-            splicing_class = "intron-retention" if F[header2ind["Intron_Retention_Type"]] == "direct-impact" else "opposite-side-intron-retention"
+            splicing_class = "Intron retention" if F[header2ind["Intron_Retention_Type"]] == "Direct impact" else "Opposite side intron retention"
             print >> hout, F[header2ind["Gene_Symbol"]] + '\t' + splicing_key + '\t' + splicing_class + '\t' + '---' + '\t' + \
                            F[header2ind["Read_Count_Vector"]] + '\t' + F[header2ind["Mutation_Key"]] + '\t' + \
                            F[header2ind["Motif_Pos"]] + '\t' + F[header2ind["Mutation_Type"]] + '\t' + F[header2ind["Is_Canonical"]]
@@ -539,7 +539,7 @@ def merge_SJ_IR_chimera_files_sv(SJ_input_file, IR_input_file, chimera_input_fil
         for line in hin:
             F = line.rstrip('\n').split('\t')
             splicing_key = F[header2ind["Chr"]] + ':' + F[header2ind["Boundary_Pos"]] + '-' + F[header2ind["Boundary_Pos"]]
-            splicing_class = "intron-retention"
+            splicing_class = "Intron retention"
 
             print >> hout, F[header2ind["Gene_Symbol"]] + '\t' + splicing_key + '\t' + splicing_class + '\t' + '---' + '\t' + \
                            F[header2ind["Read_Count_Vector"]] + '\t' + F[header2ind["SV_Key"]] + '\t' + get_sv_type(F[header2ind["SV_Key"]]) 
@@ -560,7 +560,7 @@ def merge_SJ_IR_chimera_files_sv(SJ_input_file, IR_input_file, chimera_input_fil
             if len(gene) == 0: continue
 
             # currently, only consider exon_reusage and unspliced_chimera
-            if F[header2ind["Chimera_Class"]] not in ["exon_reusage", "unspliced_chimera"]: continue
+            if F[header2ind["Chimera_Class"]] not in ["Exon reusage", "Unspliced chimera"]: continue
 
             splicing_key = ','.join([F[header2ind[x]] for x in ["Chr_1", "Pos_1", "Dir_1", "Chr_2", "Pos_2", "Dir_2", "Inserted_Seq"]])
             print >> hout, gene[0] + '\t' + splicing_key + '\t' + F[header2ind["Chimera_Class"]] + '\t' + "---" + '\t' + \
