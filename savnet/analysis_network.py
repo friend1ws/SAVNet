@@ -196,7 +196,7 @@ def extract_sav_list(network_pickles_file, effect_size_thres, log_BF_thres, alph
 def add_qvalue_to_sav_list(sav_list_target, sav_lists_permutation):
 
     permutation_num = len(sav_lists_permutation)
-    print permutation_num
+    # print permutation_num
 
     logBF_values_target = [x.score for x in sav_list_target]
 
