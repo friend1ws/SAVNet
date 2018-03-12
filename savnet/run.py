@@ -6,7 +6,7 @@ from sav import Sav
 from utils import is_tool
 
 from logger import get_logger
-logger = get_logger()
+logger = get_logger(__name__)
 
 
 def savnet_main(args):

@@ -4,7 +4,7 @@ import math, sys, os
 from subprocess import Popen, PIPE
 
 from logger import get_logger
-logger = get_logger()
+logger = get_logger(__name__)
 
 
 def soft_max(x):
