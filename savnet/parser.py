@@ -21,7 +21,7 @@ def create_parser():
                         help = "the prefix of the output")
 
     parser.add_argument("--grc", default = False, action = 'store_true',
-                        help = "convert chromosome names to Genome Reference Consortium nomenclature (default: %(default)s)")
+                        help = "Deprecated. This is not used any more. Convert chromosome names to Genome Reference Consortium nomenclature (default: %(default)s)")
 
     parser.add_argument("--genome_id", choices = ["hg19", "hg38", "mm10"], default = "hg19",
                         help = "the genome id used for selecting UCSC-GRC chromosome name corresponding files (default: %(default)s)")

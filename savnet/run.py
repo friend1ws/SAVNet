@@ -11,6 +11,10 @@ logger = get_logger()
 
 def savnet_main(args):
 
+    if args.grc == True:
+        logger.warning("--grc argument is deprecated and ignored.")
+
+
     ##########
     # read sample conf
     sconf = sample_conf.Sample_conf()
@@ -45,7 +49,7 @@ def savnet_main(args):
     logger.info("Adding annotation to splicing junction data.")
     annotate_commands = ["junc_utils", "annotate", args.output_prefix + ".SJ_merged.txt", args.output_prefix + ".SJ_merged.annot.txt",
                          "--genome_id", args.genome_id]
-    if args.grc: annotate_commands.append("--grc")
+    # if args.grc: annotate_commands.append("--grc")
     subprocess.call(annotate_commands)
 
     logger.info("Checking association betweeen mutation and splicing junction data.")
@@ -55,7 +59,7 @@ def savnet_main(args):
                               "--donor_size", args.donor_size, "--acceptor_size", args.acceptor_size,
                               "--genome_id", args.genome_id]
         # if args.branchpoint: associate_commands.append("--branchpoint")
-        if args.grc: associate_commands.append("--grc")
+        # if args.grc: associate_commands.append("--grc")
 
     else:
         associate_commands = ["junc_utils", "associate", args.output_prefix + ".SJ_merged.annot.txt", args.output_prefix + ".sv_merged.txt",
@@ -92,7 +96,7 @@ def savnet_main(args):
         logger.info("Checking association betweeen mutation and chimeric junction data.")
         associate_commands = ["chimera_utils", "associate", args.output_prefix + ".chimera_merged.txt",
                               args.output_prefix + ".sv_merged.txt", args.output_prefix + ".chimera_merged.associate.txt", "--genome_id", args.genome_id]
-        if args.grc: associate_commands.append("--grc")
+        # if args.grc: associate_commands.append("--grc")
 
         subprocess.check_call(associate_commands)
     ##########
