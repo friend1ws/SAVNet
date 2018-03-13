@@ -13,7 +13,7 @@ Welcome to SAVNet's documentation!
    about
    install
    quick_start
-   input
+   how_to_use 
    result
 
 Indices and tables
