@@ -179,6 +179,7 @@ class TestMain(unittest.TestCase):
         self.assertTrue(94 <= len(open(tmp_dir + "/test.savnet.result.txt", 'r').readlines()) <= 104)
         shutil.rmtree(tmp_dir)
 
+
 if __name__ == "__main__":
     unittest.main()
 
