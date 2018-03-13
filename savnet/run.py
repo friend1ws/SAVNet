@@ -12,7 +12,7 @@ logger = get_logger(__name__)
 def savnet_main(args):
 
     if args.grc == True:
-        logger.info("--grc argument is deprecated and ignored.")
+        logger.warning("--grc argument is deprecated and ignored.")
 
 
     ##########

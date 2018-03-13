@@ -20,13 +20,13 @@ class TestMain(unittest.TestCase):
         check_download("https://storage.googleapis.com/friend1ws_package_data/common/GRCh37.fa", \
                        cur_dir + "/resource/reference_genome/GRCh37.fa")
       
-        check_download("https://storage.googleapis.com/friend1ws_package_data/savnet/mutation_anno.tar.gz", \
-                       cur_dir + "/resource/mutation_anno.tar.gz")
-        extract_tar_gz(cur_dir + "/resource/mutation_anno.tar.gz", cur_dir + "/resource")
+        check_download("https://storage.googleapis.com/friend1ws_package_data/savnet/annovar.tar.gz", \
+                       cur_dir + "/resource/annovar.tar.gz")
+        extract_tar_gz(cur_dir + "/resource/annovar.tar.gz", cur_dir + "/resource")
 
-        check_download("https://storage.googleapis.com/friend1ws_package_data/savnet/mutation_vcf.tar.gz", \
-                       cur_dir + "/resource/mutation_vcf.tar.gz")
-        extract_tar_gz(cur_dir + "/resource/mutation_vcf.tar.gz", cur_dir + "/resource")
+        check_download("https://storage.googleapis.com/friend1ws_package_data/savnet/vcf.tar.gz", \
+                       cur_dir + "/resource/vcf.tar.gz")
+        extract_tar_gz(cur_dir + "/resource/vcf.tar.gz", cur_dir + "/resource")
 
         check_download("https://storage.googleapis.com/friend1ws_package_data/savnet/sv.tar.gz", \
                        cur_dir + "/resource/sv.tar.gz")
@@ -61,7 +61,7 @@ class TestMain(unittest.TestCase):
         tmp_dir = tempfile.mkdtemp()
 
         make_savnet_input(cur_dir + "/resource/savnet_input.txt", \
-                          cur_dir + "/resource/mutation_anno", \
+                          cur_dir + "/resource/annovar", \
                           cur_dir + "/resource/junction", \
                           cur_dir + "/resource/intron_retention", \
                           cur_dir + "/resource/qc")
@@ -91,7 +91,7 @@ class TestMain(unittest.TestCase):
         tmp_dir = tempfile.mkdtemp()
 
         make_savnet_input(cur_dir + "/resource/savnet_input_vcf.txt", \
-                          cur_dir + "/resource/mutation_vcf", \
+                          cur_dir + "/resource/vcf", \
                           cur_dir + "/resource/junction", \
                           cur_dir + "/resource/intron_retention", \
                           cur_dir + "/resource/qc")
@@ -121,7 +121,7 @@ class TestMain(unittest.TestCase):
 
         print >> sys.stderr, "Creating sample list file for SAVNET."
         make_savnet_input(cur_dir + "/resource/savnet_input.txt", \
-                          cur_dir + "/resource/mutation_vcf", \
+                          cur_dir + "/resource/vcf", \
                           cur_dir + "/resource/junction", \
                           cur_dir + "/resource/intron_retention", \
                           cur_dir + "/resource/qc")

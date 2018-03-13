@@ -16,17 +16,17 @@ def get_weight(log_final_file):
 
 def make_savnet_input(output_file, mut_dir, sj_dir, ir_dir, qc_dir):
  
-    mut_files = glob.glob(mut_dir + "/*.mutation.txt") + glob.glob(mut_dir + "/*.mutation.vcf")
+    mut_files = glob.glob(mut_dir + "/*.avinput") + glob.glob(mut_dir + "/*.vcf")
     sj_files = glob.glob(sj_dir + "/*.SJ.out.tab") 
-    ir_files = glob.glob(ir_dir + "/*.genomonIR.result.txt")
+    ir_files = glob.glob(ir_dir + "/*.intron_retention.txt")
     qc_files = glob.glob(qc_dir + "/*.Log.final.out")
 
 
     sample2mut_file = {}
     for mut_file in sorted(mut_files):
         sample = os.path.basename(mut_file)
-        sample = sample.replace(".mutation.txt", "")
-        sample = sample.replace(".mutation.vcf", "")
+        sample = sample.replace(".avinput", "")
+        sample = sample.replace(".vcf", "")
         sample = sample[:15]
         sample2mut_file[sample] = os.path.abspath(mut_file)
 
@@ -47,7 +47,7 @@ def make_savnet_input(output_file, mut_dir, sj_dir, ir_dir, qc_dir):
 
     sample2ir_file = {}
     for ir_file in sorted(ir_files):
-        sample = os.path.basename(ir_file).replace(".genomonIR.result.txt", '')
+        sample = os.path.basename(ir_file).replace(".intron_retention.txt", '')
         sample = sample[:15]
         sample2ir_file[sample] = os.path.abspath(ir_file)
 
@@ -64,7 +64,7 @@ def make_savnet_input_sv(output_file, sv_dir, sj_dir, ir_dir, chimera_dir, qc_di
 
     sv_files = glob.glob(sv_dir + "/*.genomonSV.result.filt.txt")
     sj_files = glob.glob(sj_dir + "/*.SJ.out.tab")
-    ir_files = glob.glob(ir_dir + "/*.genomonIR.result.txt")
+    ir_files = glob.glob(ir_dir + "/*.intron_retention.txt")
     chimera_files = glob.glob(chimera_dir + "/*.chimera.count.txt")
     qc_files = glob.glob(qc_dir + "/*.Log.final.out")
 
@@ -92,7 +92,7 @@ def make_savnet_input_sv(output_file, sv_dir, sj_dir, ir_dir, chimera_dir, qc_di
         
     sample2ir_file = {}
     for ir_file in sorted(ir_files):
-        sample = os.path.basename(ir_file).replace(".genomonIR.result.txt", '')
+        sample = os.path.basename(ir_file).replace(".intron_retention.txt", '')
         sample = sample[:15]
         sample2ir_file[sample] = os.path.abspath(ir_file)
 
