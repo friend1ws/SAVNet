@@ -27,9 +27,9 @@ RUN pip install --upgrade pip
 RUN pip install --upgrade setuptools
 
 RUN pip install pysam==0.13
-RUN pip install annot_utils==0.2.0
-RUN pip install junc_utils==0.4.0
-RUN pip install intron_retention_utils==0.5 
-RUN pip install chimera_utils==0.5.0
-RUN pip install savnet==0.3.1
+RUN pip install annot_utils==0.2.1
+RUN pip install junc_utils==0.4.1
+RUN pip install intron_retention_utils==0.5.1 
+RUN pip install chimera_utils==0.5.1
+RUN pip install savnet==0.3.2
 
