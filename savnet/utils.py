@@ -16,7 +16,15 @@ def median(numbers):
     if len(numbers) == 0:
         logger.warning("Vector of zero length was put to median function. Return 0")
         return 0
-    return (sorted(numbers)[int(round((len(numbers) - 1) / 2.0))] + sorted(numbers)[int(round((len(numbers) - 1) // 2.0))]) / 2.0
+    # return (sorted(numbers)[int(round((len(numbers) - 1) / 2.0))] + sorted(numbers)[int(round((len(numbers) - 1) // 2.0))]) / 2.0
+    return sorted(numbers)[int(round((len(numbers) - 1) / 2.0))]
+
+
+def quartile(numbers, prob):
+    if len(numbers) == 0:
+        logger.warning("Vector of zero length was put to quartile function. Return 0")
+        return 0
+    return sorted(numbers)[int((len(numbers) - 1) * prob)]
 
 
 def generate_configurations(dim):

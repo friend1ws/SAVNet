@@ -93,6 +93,10 @@ def create_parser():
     parser.add_argument("--effect_size_thres", type = float, default = 3.0,
                         help = "the thresould of effect size estimator used for simple edge pruning (default: %(default)s")
 
+    # parser.add_argument("--zero_filter_prob", type = float, default = 0.5,
+    #                     help = "if the fraction of non-zero support reads sample is above this value \
+    #                     among those without any somatic mutation, this node will be pruned out (default: %(defaults)s")
+
     parser.add_argument("--debug", default = False, action = 'store_true', help = "keep intermediate files")
     
     

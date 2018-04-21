@@ -19,19 +19,28 @@ class Network(object):
         self.pruned_link_vector = []
 
         self.link_vector2effect_size = {}
-        self.link_vector2median_count = {}
+        # self.link_vector2median_count = {}
+
+        self.link_vector2active_quartile_count = {}
+        self.link_vector2inactive_quartile_count = {}
+
         self.clustered_link_vector = []
 
         self.mut2log_BF = {}
         self.mut2significant_links = {}
 
 
-    def prune_link_vector(self, margin):
+    def prune_link_vector(self, margin, active_zero_filter_prob, inactive_nonzero_filter_prob):
 
         self.__link_effect_size_scan()
-        self.__link_median_count_scan()
-        self.pruned_link_vector = [x for x in self.link_vector if self.link_vector2effect_size[x] >= margin and self.link_vector2median_count[x] == 0]
-        
+        # self.__link_median_count_scan()
+        self.__link_active_quartile_count_scan(active_zero_filter_prob)
+        self.__link_inactive_quartile_count_scan(inactive_nonzero_filter_prob)
+        # self.pruned_link_vector = [x for x in self.link_vector if self.link_vector2effect_size[x] >= margin and self.link_vector2median_count[x] == 0]
+        self.pruned_link_vector = [x for x in self.link_vector if self.link_vector2effect_size[x] >= margin and \
+                                                                  self.link_vector2active_quartile_count[x] > 0 and \
+                                                                  self.link_vector2inactive_quartile_count[x] == 0]
+
 
     def cluster_link_vector(self):
 
@@ -155,7 +164,7 @@ class Network(object):
 
 
 
-    def __link_median_count_scan(self):
+    def __link_active_quartile_count_scan(self, active_zero_filter_prob = 0.5):
 
         # simple check for each link
         for mut_id, sp_id in self.link_vector:
@@ -164,12 +173,46 @@ class Network(object):
 
             # extract samples with the mutation of the link in consideration
             mut_vector = [0] * self.sample_num
+            for sample_id in self.mutation_status[mut_id]:
+                mut_vector[sample_id] = 1
+
+            # self.link_vector2median_count[(mut_id, sp_id)] = utils.median([int(cur_splicing_count_vector[j]) for j in range(self.sample_num) if mut_vector[j] == 0])
+            self.link_vector2active_quartile_count[(mut_id, sp_id)] = utils.quartile([int(cur_splicing_count_vector[j]) for j in range(self.sample_num) if mut_vector[j] == 1], active_zero_filter_prob)
+
+
+    """
+    # def __link_median_count_scan(self):
+    def __link_inactive_quartile_count_scan(self, inactive_nonzero_filter_prob = 0.5):
+
+        # simple check for each link
+        for mut_id, sp_id in self.link_vector:
+            # cur_mut_id, cur_sp_id = self.link_vector[i]
+            cur_splicing_count_vector = self.splicing_counts[sp_id]
+
+            # extract samples with the mutation of the link in consideration
             mut_vector = [0] * self.sample_num
             for sample_id in self.mutation_status[mut_id]:
                 mut_vector[sample_id] = 1
 
-            self.link_vector2median_count[(mut_id, sp_id)] = utils.median([int(cur_splicing_count_vector[j]) for j in range(self.sample_num) if mut_vector[j] == 0])
-    
+            # self.link_vector2median_count[(mut_id, sp_id)] = utils.median([int(cur_splicing_count_vector[j]) for j in range(self.sample_num) if mut_vector[j] == 0])
+            self.link_vector2inactive_quartile_count[(mut_id, sp_id)] = utils.quartile([int(cur_splicing_count_vector[j]) for j in range(self.sample_num) if mut_vector[j] == 0], inactive_nonzero_filter_prob)
+    """
+
+    def __link_inactive_quartile_count_scan(self, inactive_nonzero_filter_prob = 0.5):
+
+        sp_id2mut_vector = {}
+        for mut_id, sp_id, in self.link_vector:
+
+            if sp_id not in sp_id2mut_vector: sp_id2mut_vector[sp_id] = [0] * self.sample_num
+            for sample_id in self.mutation_status[mut_id]:
+                sp_id2mut_vector[sp_id][sample_id] = 1
+
+            
+        for mut_id, sp_id, in self.link_vector:
+            cur_splicing_count_vector = self.splicing_counts[sp_id]
+            self.link_vector2inactive_quartile_count[(mut_id, sp_id)] = utils.quartile([int(cur_splicing_count_vector[j]) for j in range(self.sample_num) if sp_id2mut_vector[sp_id][j] == 0], inactive_nonzero_filter_prob)
+
+
 
     # simply cluster links by their topologies
     def __simple_cluster_link(self):
@@ -294,11 +337,12 @@ if __name__ == "__main__":
 
     network = Network("KDM5A", mutation_status, splicing_counts, link2info, sample_list, weight_vector)
 
-    network.prune_link_vector(3.0)
+    network.prune_link_vector(3.0, 0.5, 0.5)
 
 
     print network.link_vector2effect_size
-    print network.link_vector2median_count
+    # print network.link_vector2median_count
+    print network.link_vector2inactive_quartile_count
     print network.pruned_link_vector
 
 
