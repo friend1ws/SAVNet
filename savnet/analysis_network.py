@@ -158,7 +158,8 @@ def create_network_list(merged_candidate_link_list, network_pickles_file, mut2sa
 
 
 
-def extract_sav_list(network_pickles_file, effect_size_thres, active_zero_filter_prob, inactive_nonzero_filter_prob, log_BF_thres, alpha0, beta0, alpha1, beta1, permutation = False):
+def extract_sav_list(network_pickles_file, effect_size_thres, active_zero_filter_prob, inactive_nonzero_filter_prob, log_BF_thres, sample_num_thres,
+                     alpha0, beta0, alpha1, beta1, permutation = False):
 
     sav_list = []
     seed = None 
@@ -184,7 +185,7 @@ def extract_sav_list(network_pickles_file, effect_size_thres, active_zero_filter
             network.cluster_link_vector()
             network.get_averaged_bayes_factors(alpha0, beta0, alpha1, beta1)
             
-            for sav in network.export_to_savs(log_BF_thres):
+            for sav in network.export_to_savs(log_BF_thres, sample_num_thres):
                 sav_list.append(sav)
         
         except EOFError:

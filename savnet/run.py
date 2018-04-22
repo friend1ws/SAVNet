@@ -131,14 +131,14 @@ def savnet_main(args):
 
     logger.info("Extracting splicing associated variants.")
     sav_list_target = analysis_network.extract_sav_list(args.output_prefix + ".splicing_mutatoin.network.pickles", 
-                                                        args.effect_size_thres, 0.5, 0.5, args.log_BF_thres, 
+                                                        args.effect_size_thres, 0.5, 0.5, args.log_BF_thres, 1, 
                                                         args.alpha0, args.beta0, args.alpha1, args.beta1, permutation = False)
 
     logger.info("Extracting of splicing associated variants on permutation pairs to estimate false positive ratios.")
     sav_lists_permutation = []
     for i in range(args.permutation_num):
         temp_sav_list = analysis_network.extract_sav_list(args.output_prefix + ".splicing_mutatoin.network.pickles", 
-                                                          args.effect_size_thres, 0.5, 0.5, args.log_BF_thres,
+                                                          args.effect_size_thres, 0.5, 0.5, args.log_BF_thres, 1,
                                                           args.alpha0, args.beta0, args.alpha1, args.beta1, permutation = True)
         sav_lists_permutation.append(temp_sav_list)
 

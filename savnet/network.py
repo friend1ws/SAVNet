@@ -110,13 +110,17 @@ class Network(object):
                 self.mut2significant_links[mut_id] = significant_links
 
 
-    def export_to_savs(self, log_BF_thres):
+    def export_to_savs(self, log_BF_thres, sample_num_thres = 1):
    
         sav_list = []
+        all_active_sample_list = []
+
         for mut_id in self.mut2log_BF:
             if self.mut2log_BF[mut_id] < log_BF_thres: continue
 
             active_sample_list = [self.sample_list[i] for i in self.mutation_status[mut_id]]
+            all_active_sample_list = all_active_sample_list + active_sample_list
+
             active_splicing_counts_vector = []
             active_link_info_vector = [] 
             for active_link in self.mut2significant_links[mut_id]:
@@ -130,9 +134,13 @@ class Network(object):
             tsav = Sav(self.gene, active_sample_list, active_link_info_vector, active_splicing_counts_vector, self.mut2log_BF[mut_id])
             sav_list.append(tsav)
 
-        return sav_list
+        all_active_sample_list = list(set(all_active_sample_list))
+        if len(all_active_sample_list) >= sample_num_thres:
+            return sav_list
+        else:
+            return []
                
- 
+        
     def execute_permutation(self, seed):
 
         for mutation in self.mutation_status:
@@ -355,6 +363,6 @@ if __name__ == "__main__":
     print network.mut2significant_links
 
     for sav in network.export_to_savs(3.0):
-        print sav.print_records()
+        print sav.print_records(with_fdr = False)
 
  
