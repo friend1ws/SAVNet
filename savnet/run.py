@@ -111,7 +111,7 @@ def savnet_main(args):
 
         logger.info("Creating pickles of splicing association network instances.")
         analysis_network.create_network_list(args.output_prefix + ".splicing.associate.txt",
-                                             args.output_prefix + ".splicing_mutatoin.network.pickles",
+                                             args.output_prefix + ".splicing_mutation.network.pickles",
                                              args.output_prefix + ".mut_merged.vcf",
                                              sconf.sample_names, sconf.weights)
 
@@ -124,20 +124,20 @@ def savnet_main(args):
 
         logger.info("Creating pickles of splicing association network instances.")
         analysis_network.create_network_list(args.output_prefix + ".splicing.associate.txt", 
-                                             args.output_prefix + ".splicing_mutatoin.network.pickles",
+                                             args.output_prefix + ".splicing_mutation.network.pickles",
                                              args.output_prefix + ".sv_merged.txt",
                                              sconf.sample_names, sconf.weights, sv_mode = True)
 
 
     logger.info("Extracting splicing associated variants.")
-    sav_list_target = analysis_network.extract_sav_list(args.output_prefix + ".splicing_mutatoin.network.pickles", 
+    sav_list_target = analysis_network.extract_sav_list(args.output_prefix + ".splicing_mutation.network.pickles", 
                                                         args.effect_size_thres, 0.5, 0.5, args.log_BF_thres, 1, 
                                                         args.alpha0, args.beta0, args.alpha1, args.beta1, permutation = False)
 
     logger.info("Extracting of splicing associated variants on permutation pairs to estimate false positive ratios.")
     sav_lists_permutation = []
     for i in range(args.permutation_num):
-        temp_sav_list = analysis_network.extract_sav_list(args.output_prefix + ".splicing_mutatoin.network.pickles", 
+        temp_sav_list = analysis_network.extract_sav_list(args.output_prefix + ".splicing_mutation.network.pickles", 
                                                           args.effect_size_thres, 0.5, 0.5, args.log_BF_thres, 1,
                                                           args.alpha0, args.beta0, args.alpha1, args.beta1, permutation = True)
         sav_lists_permutation.append(temp_sav_list)
@@ -176,5 +176,5 @@ def savnet_main(args):
         subprocess.call(["rm", "-rf", args.output_prefix + ".chimera_merged.txt"])
         subprocess.call(["rm", "-rf", args.output_prefix + ".chimera_merged.associate.txt"])
         subprocess.call(["rm", "-rf", args.output_prefix + ".splicing.associate.txt"])
-        subprocess.call(["rm", "-rf", args.output_prefix + ".splicing_mutatoin.network.pickles"]) 
+        subprocess.call(["rm", "-rf", args.output_prefix + ".splicing_mutation.network.pickles"]) 
 
