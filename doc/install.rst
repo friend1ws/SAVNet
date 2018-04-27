@@ -57,7 +57,7 @@ To confirm successful installation, please type:
   % savnet --version
 
   # Following messages will appear
-  savnet 0.3.1
+  savnet 0.3.2
 
 
 Alternatively, if docker is installed in your environment,
@@ -65,4 +65,4 @@ you can directly use the savnet through docker.
 
 .. code-block:: bash
 
-  % docker run friend1ws/savnet:0.3.0 --version
+  % docker run friend1ws/savnet:0.3.2 savnet --version
