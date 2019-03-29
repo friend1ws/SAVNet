@@ -107,6 +107,11 @@ and values for other columns can be set arbitrary.
   (The most striking example is the exon 14 skipping of *MET1* gene).
   To avoid this, please specify the `--keep_annotated` argument.
 
+.. note::
+
+  Many people use `--twopassMode` option when using `STAR`, in that case the 6th column will become 1 for most splicing junctions.
+  So when you used `--twopassMode` option, please specify the `--keep_annotated` argument!!
+
 
 IR_File
 ^^^^^^^
