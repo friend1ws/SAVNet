@@ -109,7 +109,7 @@ and values for other columns can be set arbitrary.
 
 .. note::
 
-  Many people use `--twopassMode` option when using `STAR`, in that case the 6th column will become 1 for most splicing junctions.
+  Many people use `--twopassMode` option when using `STAR`, and it seems that the 6th column will become 1 for most splicing junctions in that case.
   So when you used `--twopassMode` option, please specify the `--keep_annotated` argument!!
 
 
