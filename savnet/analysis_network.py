@@ -1,5 +1,7 @@
 #! /usr/bin/env python
 
+from __future__ import print_function
+
 try:
     import cPickle as pickle
 except:
@@ -8,8 +10,9 @@ except:
 
 import random
 from collections import namedtuple
-from network import Network
-from sav import Sav
+
+from .network import Network
+from .sav import Sav
 
 Link_info_mut = namedtuple("Link_info_mut", ("Mutation_Key", "Motif_Pos", "Mutation_Type", "Is_Canonical", "Splicing_Key", "Splicing_Class", "Is_Inframe"))
 Link_info_sv = namedtuple("Link_info_sv", ("SV_Key", "SV_Type", "Splicing_Key", "Splicing_Class", "Is_Inframe"))
@@ -172,7 +175,7 @@ def extract_sav_list(network_pickles_file, effect_size_thres, active_zero_filter
     
                 # Set the seed
                 if seed is None:
-                    seed = range(network.sample_num)
+                    seed = list(range(network.sample_num))
                     no_overlap = 0
                     while no_overlap == 0:
                         random.shuffle(seed)
@@ -236,9 +239,10 @@ def execute_network_analysis(network_pickles_file, savnet_target_result_file, sa
     add_qvalue_to_sav_list(sav_list_target, sav_lists_permutation)
 
     with open(savnet_target_result_file, 'w') as hout:
-        print >> hout, Sav.print_header_mut
+        print(Sav.print_header_mut, file = hout)
         for sav in sav_list_target:
-            print >> hout, sav.print_records()
+            print(sav.print_records(), file = hout)
+
 
 
 if __name__ == "__main__":

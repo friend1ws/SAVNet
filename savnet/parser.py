@@ -1,8 +1,9 @@
 #! /usr/bin/env python
 
-from run import *
 import argparse
-from version import __version__
+
+from .run import *
+from .version import __version__
 
 def create_parser():
 

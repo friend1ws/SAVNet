@@ -3,8 +3,8 @@
 import unittest
 import sys, os, tempfile, shutil, filecmp, tarfile
 import savnet 
-from check_download import *
-from make_savnet_input import *
+from .check_download import check_download
+from .make_savnet_input import *
 
 class TestMain(unittest.TestCase):
 
@@ -76,7 +76,7 @@ class TestMain(unittest.TestCase):
         savnet_args = [sample_list_file, output_prefix, "--reference", ref_genome, \
                            "--SJ_pooled_control_file", sj_control_file, \
                            "--IR_pooled_control_file", ir_control_file, "--grc"]
-        print "savnet" + ' ' + ' '.join(savnet_args)
+        print("savnet" + ' ' + ' '.join(savnet_args0))
 
         args = self.parser.parse_args(savnet_args)
         savnet.run.savnet_main(args)
@@ -105,7 +105,7 @@ class TestMain(unittest.TestCase):
         savnet_args = [sample_list_file, output_prefix, \
                            "--SJ_pooled_control_file", sj_control_file, \
                            "--IR_pooled_control_file", ir_control_file, "--grc"]
-        print "savnet" + ' ' + ' '.join(savnet_args)
+        print("savnet" + ' ' + ' '.join(savnet_args))
 
         args = self.parser.parse_args(savnet_args)
         savnet.run.savnet_main(args)
@@ -119,7 +119,7 @@ class TestMain(unittest.TestCase):
         cur_dir = os.path.dirname(os.path.abspath(__file__))
         tmp_dir = tempfile.mkdtemp()
 
-        print >> sys.stderr, "Creating sample list file for SAVNET."
+        print("Creating sample list file for SAVNET.", file = sys.stderr)
         make_savnet_input(cur_dir + "/resource/savnet_input.txt", \
                           cur_dir + "/resource/vcf", \
                           cur_dir + "/resource/junction", \
@@ -128,8 +128,8 @@ class TestMain(unittest.TestCase):
 
         with open(cur_dir + "/resource/savnet_input_line1.txt", 'w') as hout:
             with open(cur_dir + "/resource/savnet_input.txt", 'r') as hin:
-                print >> hout, hin.readline().rstrip('\n')
-                print >> hout, hin.readline().rstrip('\n')
+                print(hin.readline().rstrip('\n'), file = hout)
+                print(hin.readline().rstrip('\n'), file = hout)
 
         sample_list_file = cur_dir + "/resource/savnet_input_line1.txt"
         output_prefix = tmp_dir + "/test"
@@ -141,7 +141,7 @@ class TestMain(unittest.TestCase):
         savnet_args = [sample_list_file, output_prefix, "--reference", ref_genome, \
                            "--SJ_pooled_control_file", sj_control_file, \
                            "--IR_pooled_control_file", ir_control_file, "--grc"]
-        print "savnet" + ' ' + ' '.join(savnet_args)
+        print("savnet" + ' ' + ' '.join(savnet_args))
 
         args = self.parser.parse_args(savnet_args)
         savnet.run.savnet_main(args)
@@ -171,7 +171,7 @@ class TestMain(unittest.TestCase):
         savnet_args = [sample_list_file, output_prefix, "--sv", \
                            "--SJ_pooled_control_file", sj_control_file, \
                            "--IR_pooled_control_file", ir_control_file, "--grc"]
-        print "savnet" + ' ' + ' '.join(savnet_args)
+        print("savnet" + ' ' + ' '.join(savnet_args))
 
         args = self.parser.parse_args(savnet_args)
         savnet.run.savnet_main(args)

@@ -1,13 +1,14 @@
 #! /usr/bin/env python
 
+from __future__ import print_function
 import sys, subprocess, os
-import preprocess, analysis_network, sample_conf
-from sav import Sav
-from utils import is_tool
 
-from logger import get_logger
+from . import preprocess, analysis_network, sample_conf
+from .sav import Sav
+from .utils import is_tool
+
+from .logger import get_logger
 logger = get_logger(__name__)
-
 
 def savnet_main(args):
 
@@ -148,21 +149,21 @@ def savnet_main(args):
     logger.info("Generating final outputs.")
     with open(args.output_prefix + ".savnet.result.txt", 'w') as hout:
         if args.sv == False:
-            print >> hout, Sav.print_header_mut 
+            print(Sav.print_header_mut, file = hout)
         else:
-            print >> hout, Sav.print_header_sv
+            print(Sav.print_header_sv, file = hout)
         for sav in sav_list_target:
-            print >> hout, '\n'.join(sav.print_records(sv_mode = args.sv, with_fdr = True))
+            print('\n'.join(sav.print_records(sv_mode = args.sv, with_fdr = True)), file = hout)
 
     with open(args.output_prefix + ".splicing_mutation.count_summary.anno.perm_all.txt", 'w') as hout:
         if args.sv == False:
-            print >> hout, "Permutation_Num" + '\t' + Sav.print_header_mut
+            print("Permutation_Num" + '\t' + Sav.print_header_mut, file = hout)
         else:
-            print >> hout, "Permutation_Num" + '\t' + Sav.print_header_sv
+            print("Permutation_Num" + '\t' + Sav.print_header_sv, file = hout)
 
         for i in range(len(sav_lists_permutation)):
             for sav in sav_lists_permutation[i]:
-                print >> hout, '\n'.join([str(i) + '\t' + x for x in sav.print_records(sv_mode = args.sv, with_fdr = False)])
+                print('\n'.join([str(i) + '\t' + x for x in sav.print_records(sv_mode = args.sv, with_fdr = False)]), file = hout)
 
     if args.debug == False:
 

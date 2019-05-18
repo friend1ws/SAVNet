@@ -1,5 +1,7 @@
 #! /usr/bin/env python
 
+from __future__ import print_function
+
 class Sav(object):
 
     print_header_mut = '\t'.join(["Gene_Symbol", "Sample_Name", "Mutation_Key", "Motif_Pos", "Mutation_Type", "Is_Canonical",

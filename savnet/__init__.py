@@ -1,7 +1,7 @@
 #! /usr/bin/env python
 
-from parser import create_parser
-from run import *
+from .parser import create_parser
+from .run import *
 
 def main():
 

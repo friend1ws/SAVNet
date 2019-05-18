@@ -36,7 +36,7 @@ setup(
     ],
 
     packages = find_packages(exclude = ['tests', 'doc', 'docker']),
-    package_data={'sv_utils': ['data/*']},
+    # package_data={'sv_utils': ['data/*']},
 
     install_requires = ["annot_utils>=0.2.1", "pysam>=0.9.0", "junc_utils>=0.4.1", "intron_retention_utils>=0.5.1", "chimera_utils>=0.5.1"],
     entry_points = {'console_scripts': ['savnet = savnet:main']}

@@ -1,5 +1,7 @@
 #! /usr/bin/env python
 
+from __future__ import print_function
+
 import sys, gzip, subprocess, re, time 
 import pysam
 
@@ -36,7 +38,7 @@ def merge_SJ2(SJ_file_list, output_file, control_file, junc_num_thres, is_keep_a
             for line in hin:
                 F = line.rstrip('\n').split('\t')
                 if F[0] + '\t' + F[1] + '\t' + F[2] in junc2list:
-                    print >> hout, F[0] + '\t' + F[1] + '\t' + F[2] + '\t' + str(temp_id) + '\t' + F[6]
+                    print(F[0] + '\t' + F[1] + '\t' + F[2] + '\t' + str(temp_id) + '\t' + F[6], file = hout)
       
             temp_id = temp_id + 1 
 
@@ -61,7 +63,7 @@ def merge_SJ2(SJ_file_list, output_file, control_file, junc_num_thres, is_keep_a
 
                 # if not the first line 
                 if temp_chr != "":
-                    print >> hout, temp_chr + '\t' + temp_start + '\t' + temp_end + '\t' + ','.join(temp_count)
+                    print(temp_chr + '\t' + temp_start + '\t' + temp_end + '\t' + ','.join(temp_count), file = hout)
 
                 temp_chr = F[0]
                 temp_start = F[1]
@@ -74,7 +76,7 @@ def merge_SJ2(SJ_file_list, output_file, control_file, junc_num_thres, is_keep_a
     # last check 
 
     if temp_chr != "":
-        print >> hout, temp_chr + '\t' + temp_start + '\t' + temp_end + '\t' + ','.join(temp_count)
+        print(temp_chr + '\t' + temp_start + '\t' + temp_end + '\t' + ','.join(temp_count), file = hout)
 
     hout.close()
  
@@ -136,7 +138,7 @@ def merge_intron_retention(IR_file_list, output_file, control_file, ratio_thres,
                 F = line.rstrip('\n').split('\t')
                 key = '\t'.join([F[header2ind[x]] for x in target_header])
                 if key in intron_retention2list:
-                    print >> hout, key + '\t' + str(temp_id) + '\t' + F[header2ind["Intron_Retention_Read_Count"]]
+                    print(key + '\t' + str(temp_id) + '\t' + F[header2ind["Intron_Retention_Read_Count"]], file = hout)
 
         temp_id = temp_id + 1
 
@@ -153,7 +155,7 @@ def merge_intron_retention(IR_file_list, output_file, control_file, ratio_thres,
     temp_key = ""
     temp_count = ["0"] * temp_id
     hout = open(output_file, 'w')
-    print >> hout, '\t'.join(target_header) + '\t' + "Read_Count_Vector"
+    print('\t'.join(target_header) + '\t' + "Read_Count_Vector", file = hout)
 
     with open(output_file + '.tmp.sorted.txt', 'r') as hin:
         for line in hin:
@@ -163,7 +165,7 @@ def merge_intron_retention(IR_file_list, output_file, control_file, ratio_thres,
 
                 # if not the first line 
                 if temp_chr != "":
-                    print >> hout, temp_key + '\t' + ','.join(temp_count)
+                    print(temp_key + '\t' + ','.join(temp_count), file = hout)
 
                 temp_chr = F[0]
                 temp_pos = F[1]
@@ -175,7 +177,7 @@ def merge_intron_retention(IR_file_list, output_file, control_file, ratio_thres,
     
     # last check 
     if temp_key != "":
-        print >> hout, temp_key + '\t' + ','.join(temp_count) 
+        print(temp_key + '\t' + ','.join(temp_count) , file = hout)
 
     hout.close()
  
@@ -218,7 +220,7 @@ def merge_chimera(chimera_file_list, output_file, control_file, num_thres, overh
                 F = line.rstrip('\n').split('\t')
                 key = '\t'.join([F[header2ind[x]] for x in target_header])
                 if key in chimera2list:
-                    print >> hout, key + '\t' + str(temp_id) + '\t' + F[header2ind["Read_Pair_Num"]]
+                    print(key + '\t' + str(temp_id) + '\t' + F[header2ind["Read_Pair_Num"]], file = hout)
 
         temp_id = temp_id + 1
 
@@ -237,7 +239,7 @@ def merge_chimera(chimera_file_list, output_file, control_file, num_thres, overh
     temp_key = ""
     temp_count = ["0"] * temp_id
     hout = open(output_file, 'w')
-    print >> hout, '\t'.join(target_header) + '\t' + "Read_Count_Vector"
+    print('\t'.join(target_header) + '\t' + "Read_Count_Vector", file = hout)
 
     with open(output_file + '.tmp.sorted.txt', 'r') as hin:
         for line in hin:
@@ -267,7 +269,7 @@ def merge_chimera(chimera_file_list, output_file, control_file, num_thres, overh
                                     control_flag = 1
  
                     if control_flag == 0:
-                        print >> hout, temp_key + '\t' + ','.join(temp_count)
+                        print(temp_key + '\t' + ','.join(temp_count), file = hout)
 
                 temp_chr = F[0]
                 temp_pos = F[1] 
@@ -296,7 +298,7 @@ def merge_chimera(chimera_file_list, output_file, control_file, num_thres, overh
                     control_flag = 1
  
     if control_flag == 0:
-        print >> hout, temp_key + '\t' + ','.join(temp_count)
+        print(temp_key + '\t' + ','.join(temp_count), file = hout)
 
     hout.close()
  
@@ -333,7 +335,7 @@ def merge_mut(mutation_file_list, output_file):
     hout = open(output_file, 'w')
     for mut in sorted(mut2sample):
         if len(mut2sample[mut]) == sample_num: continue
-        print >> hout, mut + '\t' + ','.join(mut2sample[mut]) 
+        print(mut + '\t' + ','.join(mut2sample[mut]), file = hout)
 
     hout.close()
 
@@ -395,7 +397,7 @@ def merge_mut2(mutation_file_list, output_file, reference):
     hout = open(output_file, 'w')
     for mut in sorted(mut2sample):
         if len(mut2sample[mut]) == sample_num: continue
-        print >> hout, mut + '\t' + ','.join(mut2sample[mut])
+        print(mut + '\t' + ','.join(mut2sample[mut]), file = hout)
 
     hout.close()
 
@@ -423,7 +425,7 @@ def merge_sv(sv_file_list, output_file):
 
     hout = open(output_file, 'w')
     for sv in sorted(sv2sample):
-        print >> hout, sv + '\t' + ','.join(sv2sample[sv])
+        print(sv + '\t' + ','.join(sv2sample[sv]), file = hout)
 
     hout.close()
 
@@ -446,11 +448,11 @@ def merge_SJ_IR_files(SJ_input_file, IR_input_file, output_file):
 
             if "---" in genes: genes.remove("---")
             if len(genes) > 0:
-                genes_nm = filter(lambda x: x.find("(NM_") > 0, genes)
+                genes_nm = list(filter(lambda x: x.find("(NM_") > 0, genes))
                 if len(genes_nm) > 0: genes = genes_nm
 
             if len(genes) > 0:
-                genes_single = filter(lambda x: x.find("-") == -1, genes)
+                genes_single = list(filter(lambda x: x.find("-") == -1, genes))
                 if len(genes_single) > 0: genes = genes_single
  
             gene = genes[0]
@@ -458,9 +460,9 @@ def merge_SJ_IR_files(SJ_input_file, IR_input_file, output_file):
 
             splicing_key = F[header2ind["SJ_1"]] + ':' + F[header2ind["SJ_2"]] + '-' + F[header2ind["SJ_3"]]
 
-            print >> hout, gene + '\t' + splicing_key + '\t' + F[header2ind["Splicing_Class"]] + '\t' + F[header2ind["Is_Inframe"]] + '\t' + \
-                            F[header2ind["SJ_4"]] + '\t' + F[header2ind["Mutation_Key"]] + '\t' + F[header2ind["Motif_Pos"]] + '\t' + \
-                            F[header2ind["Mutation_Type"]] + '\t' + F[header2ind["Is_Canonical"]]
+            print(gene + '\t' + splicing_key + '\t' + F[header2ind["Splicing_Class"]] + '\t' + F[header2ind["Is_Inframe"]] + '\t' + \
+                  F[header2ind["SJ_4"]] + '\t' + F[header2ind["Mutation_Key"]] + '\t' + F[header2ind["Motif_Pos"]] + '\t' + \
+                  F[header2ind["Mutation_Type"]] + '\t' + F[header2ind["Is_Canonical"]], file = hout)
 
 
     with open(IR_input_file, 'r') as hin:
@@ -473,15 +475,15 @@ def merge_SJ_IR_files(SJ_input_file, IR_input_file, output_file):
             F = line.rstrip('\n').split('\t')
             splicing_key = F[header2ind["Chr"]] + ':' + F[header2ind["Boundary_Pos"]] + '-' + F[header2ind["Boundary_Pos"]]
             splicing_class = "Intron retention" if F[header2ind["Intron_Retention_Type"]] == "Direct impact" else "Opposite side intron retention"
-            print >> hout, F[header2ind["Gene_Symbol"]] + '\t' + splicing_key + '\t' + splicing_class + '\t' + '---' + '\t' + \
-                           F[header2ind["Read_Count_Vector"]] + '\t' + F[header2ind["Mutation_Key"]] + '\t' + \
-                           F[header2ind["Motif_Pos"]] + '\t' + F[header2ind["Mutation_Type"]] + '\t' + F[header2ind["Is_Canonical"]]
+            print(F[header2ind["Gene_Symbol"]] + '\t' + splicing_key + '\t' + splicing_class + '\t' + '---' + '\t' + \
+                  F[header2ind["Read_Count_Vector"]] + '\t' + F[header2ind["Mutation_Key"]] + '\t' + \
+                  F[header2ind["Motif_Pos"]] + '\t' + F[header2ind["Mutation_Type"]] + '\t' + F[header2ind["Is_Canonical"]], file = hout)
 
     hout.close()
 
     hout = open(output_file, 'w')
-    print >> hout, '\t'.join(["Gene_Symbol", "Splicing_Key", "Splicing_Class", "Is_Inframe", "Read_Counts",
-                              "Mutation_Key", "Motif_Pos", "Mutation_Type", "Is_Canonical"])
+    print('\t'.join(["Gene_Symbol", "Splicing_Key", "Splicing_Class", "Is_Inframe", "Read_Counts",
+                     "Mutation_Key", "Motif_Pos", "Mutation_Type", "Is_Canonical"]), file = hout)
     hout.close()
 
     hout = open(output_file, 'a')
@@ -526,8 +528,8 @@ def merge_SJ_IR_chimera_files_sv(SJ_input_file, IR_input_file, chimera_input_fil
             if len(gene) == 0: continue
 
             splicing_key = F[header2ind["SJ_1"]] + ':' + F[header2ind["SJ_2"]] + '-' + F[header2ind["SJ_3"]]
-            print >> hout, gene[0] + '\t' + splicing_key + '\t' + F[header2ind["Splicing_Class"]] + '\t' + F[header2ind["Is_Inframe"]] + '\t' + \
-                            F[header2ind["SJ_4"]] + '\t' + F[header2ind["SV_Key"]] + '\t' + get_sv_type(F[header2ind["SV_Key"]])
+            print(gene[0] + '\t' + splicing_key + '\t' + F[header2ind["Splicing_Class"]] + '\t' + F[header2ind["Is_Inframe"]] + '\t' + \
+                  F[header2ind["SJ_4"]] + '\t' + F[header2ind["SV_Key"]] + '\t' + get_sv_type(F[header2ind["SV_Key"]]), file = hout)
 
 
     with open(IR_input_file, 'r') as hin:
@@ -541,8 +543,8 @@ def merge_SJ_IR_chimera_files_sv(SJ_input_file, IR_input_file, chimera_input_fil
             splicing_key = F[header2ind["Chr"]] + ':' + F[header2ind["Boundary_Pos"]] + '-' + F[header2ind["Boundary_Pos"]]
             splicing_class = "Intron retention"
 
-            print >> hout, F[header2ind["Gene_Symbol"]] + '\t' + splicing_key + '\t' + splicing_class + '\t' + '---' + '\t' + \
-                           F[header2ind["Read_Count_Vector"]] + '\t' + F[header2ind["SV_Key"]] + '\t' + get_sv_type(F[header2ind["SV_Key"]]) 
+            print(F[header2ind["Gene_Symbol"]] + '\t' + splicing_key + '\t' + splicing_class + '\t' + '---' + '\t' + \
+                  F[header2ind["Read_Count_Vector"]] + '\t' + F[header2ind["SV_Key"]] + '\t' + get_sv_type(F[header2ind["SV_Key"]]), file = hout)
 
     with open(chimera_input_file, 'r') as hin: 
 
@@ -563,13 +565,13 @@ def merge_SJ_IR_chimera_files_sv(SJ_input_file, IR_input_file, chimera_input_fil
             if F[header2ind["Chimera_Class"]] not in ["Exon reusage", "Unspliced chimera"]: continue
 
             splicing_key = ','.join([F[header2ind[x]] for x in ["Chr_1", "Pos_1", "Dir_1", "Chr_2", "Pos_2", "Dir_2", "Inserted_Seq"]])
-            print >> hout, gene[0] + '\t' + splicing_key + '\t' + F[header2ind["Chimera_Class"]] + '\t' + "---" + '\t' + \
-                           F[header2ind["Read_Count_Vector"]] + '\t' + F[header2ind["SV_Key"]] + '\t' + get_sv_type(F[header2ind["SV_Key"]]) 
+            print(gene[0] + '\t' + splicing_key + '\t' + F[header2ind["Chimera_Class"]] + '\t' + "---" + '\t' + \
+                  F[header2ind["Read_Count_Vector"]] + '\t' + F[header2ind["SV_Key"]] + '\t' + get_sv_type(F[header2ind["SV_Key"]]), file = hout)
 
     hout.close()
 
     hout = open(output_file, 'w')
-    print >> hout, '\t'.join(["Gene_Symbol", "Splicing_Key", "Splicing_Class", "Is_Inframe", "Read_Counts", "SV_Key", "SV_Type"])
+    print('\t'.join(["Gene_Symbol", "Splicing_Key", "Splicing_Class", "Is_Inframe", "Read_Counts", "SV_Key", "SV_Type"]), file = hout)
     hout.close()
 
     hout = open(output_file, 'a')
@@ -591,7 +593,7 @@ def add_gene_symbol(input_file, output_file):
         for i in range(len(header)):
             header2ind[header[i]] = i
 
-        print >> hout0, "Gene_Symbol" + '\t' + '\t'.join(header)
+        print("Gene_Symbol" + '\t' + '\t'.join(header), file = hout0)
 
         for line in hin:
             F = line.rstrip('\n').split('\t')
@@ -600,13 +602,13 @@ def add_gene_symbol(input_file, output_file):
 
             if "---" in genes: genes.remove("---")
             if len(genes) > 0: 
-                genes_nm = filter(lambda x: x.find("(NM_") > 0, genes)
+                genes_nm = list(filter(lambda x: x.find("(NM_") > 0, genes))
                 if len(genes_nm) > 0: genes = genes_nm
 
             gene = genes[0]
             gene = re.sub(r"\(N[MR]_\d+\)", "", gene)
 
-            print >> hout1, gene + '\t' + '\t'.join(F)
+            print(gene + '\t' + '\t'.join(F), file = hout1)
 
     hout0.close()
     hout1.close()
@@ -630,7 +632,7 @@ def gene_filter(genes):
     genes = list(set(genes))
     if "---" in genes: genes.remove("---")
     if len(genes) > 0: 
-        genes_nm = filter(lambda x: x.find("(NM_") > 0, genes)
+        genes_nm = list(filter(lambda x: x.find("(NM_") > 0, genes))
         if len(genes_nm) > 0: genes = genes_nm
    
     if len(genes) > 0: 

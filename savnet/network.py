@@ -1,8 +1,11 @@
 #! /usr/bin/env python
 
+from __future__ import print_function
+
 import copy, math, random
-import utils
-from sav import Sav
+
+from . import utils
+from .sav import Sav
 
 class Network(object):
 
@@ -10,7 +13,7 @@ class Network(object):
         self.gene = gene
         self.mutation_status = mutation_status
         self.splicing_counts = splicing_counts
-        self.link_vector = link2info.keys()
+        self.link_vector = list(link2info)
         self.link2info = link2info
         self.sample_list = sample_list
         self.sample_num = len(sample_list)
@@ -232,7 +235,7 @@ class Network(object):
             mut_id2sp_id[mut_id].append(sp_id)
 
         clustered_link = []
-        mut_ids = mut_id2sp_id.keys()
+        mut_ids = list(mut_id2sp_id)
 
         # first, append all the mut_ids to the remaining_ids
         remaining_ids = copy.deepcopy(mut_ids) # deep copy
@@ -348,21 +351,21 @@ if __name__ == "__main__":
     network.prune_link_vector(3.0, 0.5, 0.5)
 
 
-    print network.link_vector2effect_size
+    print(network.link_vector2effect_size)
     # print network.link_vector2median_count
-    print network.link_vector2inactive_quartile_count
-    print network.pruned_link_vector
+    print(network.link_vector2inactive_quartile_count)
+    print(network.pruned_link_vector)
 
 
     network.cluster_link_vector()
-    print network.clustered_link_vector
+    print(network.clustered_link_vector)
 
 
     network.get_averaged_bayes_factors(1.0, 1.0, 1.0, 0.01)
-    print network.mut2log_BF
-    print network.mut2significant_links
+    print(network.mut2log_BF)
+    print(network.mut2significant_links)
 
     for sav in network.export_to_savs(3.0):
-        print sav.print_records(with_fdr = False)
+        print(sav.print_records(with_fdr = False))
 
  
