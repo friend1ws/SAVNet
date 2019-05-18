@@ -57,7 +57,7 @@ To confirm successful installation, please type:
   % savnet --version
 
   # Following messages will appear
-  savnet 0.3.2
+  savnet 0.4.0
 
 
 Alternatively, if docker is installed in your environment,
