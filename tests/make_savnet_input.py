@@ -1,5 +1,7 @@
 #! /usr/bin/env python
 
+from __future__ import print_function
+
 import os, glob
 
 def get_weight(log_final_file):
@@ -53,11 +55,11 @@ def make_savnet_input(output_file, mut_dir, sj_dir, ir_dir, qc_dir):
 
 
     with open(output_file, 'w') as hout:
-        print >> hout, '\t'.join(["Sample_Name", "Weight", "Mutation_File", "SJ_File", "IR_File"])
+        print('\t'.join(["Sample_Name", "Weight", "Mutation_File", "SJ_File", "IR_File"]), file = hout)
         for sample in sorted(sample2mut_file):
             if sample not in sample2sj_file: continue
             if sample not in sample2ir_file: continue
-            print >> hout, sample + '\t' + str(round(sample2weight[sample], 4)) + '\t' + sample2mut_file[sample] + '\t' + sample2sj_file[sample] + '\t' + sample2ir_file[sample]
+            print(sample + '\t' + str(round(sample2weight[sample], 4)) + '\t' + sample2mut_file[sample] + '\t' + sample2sj_file[sample] + '\t' + sample2ir_file[sample], file = hout)
 
 
 def make_savnet_input_sv(output_file, sv_dir, sj_dir, ir_dir, chimera_dir, qc_dir):
@@ -105,14 +107,14 @@ def make_savnet_input_sv(output_file, sv_dir, sj_dir, ir_dir, chimera_dir, qc_di
 
 
     hout = open(output_file, 'w')
-    print >> hout, '\t'.join(["Sample_Name", "Weight", "SV_File", "SJ_File", "IR_File", "Chimera_File"])
+    print('\t'.join(["Sample_Name", "Weight", "SV_File", "SJ_File", "IR_File", "Chimera_File"]), file = hout)
     for sample in sorted(sample2sv_file):
         if sample not in sample2sj_file: continue
         if sample not in sample2ir_file: continue
         if sample not in sample2chimera_file: continue
-        print >> hout, sample + '\t' + str(round(sample2weight[sample], 4)) + '\t' + \
-                       sample2sv_file[sample] + '\t' + sample2sj_file[sample] + '\t' + \
-                       sample2ir_file[sample] + '\t' + sample2chimera_file[sample]
+        print(sample + '\t' + str(round(sample2weight[sample], 4)) + '\t' + \
+              sample2sv_file[sample] + '\t' + sample2sj_file[sample] + '\t' + \
+              sample2ir_file[sample] + '\t' + sample2chimera_file[sample], file = hout) 
 
 
 if __name__ == "__main__":

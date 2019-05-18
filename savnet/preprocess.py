@@ -10,7 +10,7 @@ def merge_SJ2(SJ_file_list, output_file, control_file, junc_num_thres, is_keep_a
     # get junctions registered in control
     control_db = {}
     if control_file is not None:
-        with gzip.open(control_file, 'r') as hin:
+        with gzip.open(control_file, 'rt') as hin:
             for line in hin:
                 F = line.rstrip('\n').split('\t')
                 key = F[0] + '\t' + F[1] + '\t' + F[2]
@@ -94,7 +94,7 @@ def merge_intron_retention(IR_file_list, output_file, control_file, ratio_thres,
     # get control intron retention info
     control_db = {}
     if control_file is not None:
-        with gzip.open(control_file, 'r') as hin:
+        with gzip.open(control_file, 'rt') as hin:
             for line in hin:
                 F = line.rstrip('\n').split('\t')
                 control_db[F[0] + '\t' + F[1]] = 1
@@ -348,7 +348,7 @@ def merge_mut2(mutation_file_list, output_file, reference):
     for mut_file in mutation_file_list:
         sample_ind = sample_ind + 1
         is_vcf = True if mut_file.endswith(".vcf") or mut_file.endswith(".vcf.gz") else False
-        hin2 = gzip.open(mut_file, 'r') if mut_file.endswith(".gz") else open(mut_file, 'r')
+        hin2 = gzip.open(mut_file, 'rt') if mut_file.endswith(".gz") else open(mut_file, 'r')
 
         for line2 in hin2:
             F2 = line2.rstrip('\n').split('\t')
@@ -391,6 +391,8 @@ def merge_mut2(mutation_file_list, output_file, reference):
                 mut2sample[key] = []
 
             mut2sample[key].append(str(sample_ind))
+
+        hin2.close()
 
     sample_num = sample_ind
 

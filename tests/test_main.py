@@ -83,8 +83,9 @@ class TestMain(unittest.TestCase):
         args = self.parser.parse_args(savnet_args)
         savnet.run.savnet_main(args)
 
-        self.assertTrue(317 <= len(open(tmp_dir + "/test.savnet.result.txt", 'r').readlines()) <= 327)
-        shutil.rmtree(tmp_dir)
+        with open(tmp_dir + "/test.savnet.result.txt", 'r') as hin: record_num = len(hin.readlines())
+        self.assertTrue(317 <= record_num <= 327)
+        # shutil.rmtree(tmp_dir)
 
 
     def test2(self):
@@ -112,7 +113,8 @@ class TestMain(unittest.TestCase):
         args = self.parser.parse_args(savnet_args)
         savnet.run.savnet_main(args)
 
-        self.assertTrue(317 <= len(open(tmp_dir + "/test.savnet.result.txt", 'r').readlines()) <= 327)
+        with open(tmp_dir + "/test.savnet.result.txt", 'r') as hin: record_num = len(hin.readlines())
+        self.assertTrue(317 <= record_num <= 327)
         shutil.rmtree(tmp_dir)
 
 
@@ -148,7 +150,8 @@ class TestMain(unittest.TestCase):
         args = self.parser.parse_args(savnet_args)
         savnet.run.savnet_main(args)
 
-        self.assertTrue(len(open(tmp_dir + "/test.savnet.result.txt", 'r').readlines()) == 1)
+        with open(tmp_dir + "/test.savnet.result.txt", 'r') as hin: record_num = len(hin.readlines())
+        self.assertTrue(record_num == 1)
         shutil.rmtree(tmp_dir)
 
 
@@ -178,7 +181,8 @@ class TestMain(unittest.TestCase):
         args = self.parser.parse_args(savnet_args)
         savnet.run.savnet_main(args)
 
-        self.assertTrue(94 <= len(open(tmp_dir + "/test.savnet.result.txt", 'r').readlines()) <= 104)
+        with open(tmp_dir + "/test.savnet.result.txt", 'r') as hin: record_num = len(hin.readlines())
+        self.assertTrue(94 <= record_num <= 104)
         shutil.rmtree(tmp_dir)
 
 

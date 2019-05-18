@@ -193,7 +193,9 @@ def extract_sav_list(network_pickles_file, effect_size_thres, active_zero_filter
         
         except EOFError:
             break
-    
+   
+    in_s.close()
+ 
     return sav_list
 
 
