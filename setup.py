@@ -21,6 +21,8 @@ setup(
     name = 'savnet',
     version = get_version(),
     description='Python tools for detecting mutations causing splicing changes',
+    long_description=long_description, 
+    long_description_content_type='text/markdown',
     url = 'https://github.com/friend1ws/SAVNet',
     author = 'Yuichi Shiraishi',
     author_email = 'friend1ws@gamil.com',
@@ -32,13 +34,15 @@ setup(
         'License :: OSI Approved :: GNU General Public License v3 (GPLv3)',
         'Operating System :: Unix',
         'Programming Language :: Python :: 2.7',
+        'Programming Language :: Python :: 3.5',
+        'Programming Language :: Python :: 3.6',
         'Topic :: Scientific/Engineering :: Bio-Informatics'
     ],
 
     packages = find_packages(exclude = ['tests', 'doc', 'docker']),
     # package_data={'sv_utils': ['data/*']},
 
-    install_requires = ["annot_utils>=0.2.1", "pysam>=0.9.0", "junc_utils>=0.4.1", "intron_retention_utils>=0.5.1", "chimera_utils>=0.5.1"],
+    install_requires = ["annot_utils>=0.3.0", "pysam>=0.9.0", "junc_utils>=0.5.0", "intron_retention_utils>=0.6.0", "chimera_utils>=0.6.0"],
     entry_points = {'console_scripts': ['savnet = savnet:main']}
 
 )
