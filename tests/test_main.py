@@ -1,5 +1,7 @@
 #! /usr/bin/env python
 
+from __future__ import print_function
+
 import unittest
 import sys, os, tempfile, shutil, filecmp, tarfile
 import savnet 
@@ -76,7 +78,7 @@ class TestMain(unittest.TestCase):
         savnet_args = [sample_list_file, output_prefix, "--reference", ref_genome, \
                            "--SJ_pooled_control_file", sj_control_file, \
                            "--IR_pooled_control_file", ir_control_file, "--grc"]
-        print("savnet" + ' ' + ' '.join(savnet_args0))
+        print("savnet" + ' ' + ' '.join(savnet_args))
 
         args = self.parser.parse_args(savnet_args)
         savnet.run.savnet_main(args)
