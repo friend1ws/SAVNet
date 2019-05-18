@@ -116,6 +116,8 @@ def make_savnet_input_sv(output_file, sv_dir, sj_dir, ir_dir, chimera_dir, qc_di
               sample2sv_file[sample] + '\t' + sample2sj_file[sample] + '\t' + \
               sample2ir_file[sample] + '\t' + sample2chimera_file[sample], file = hout) 
 
+    hout.close()
+
 
 if __name__ == "__main__":
 
