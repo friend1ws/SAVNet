@@ -19,19 +19,19 @@ by `Suzuki et al. (NAR, 2014) <https://doi.org/10.1093/nar/gku885>`_.
 .. code-block:: none
 
   # Somatic mutation
-  % wget https://storage.googleapis.com/friend1ws_package_data/savnet/vcf.tar.gz
+  % wget https://zenodo.org/api/files/6dd7ee0c-4dce-45fe-9459-478fcd0e8102/vcf.tar.gz
   % tar -zxvf vcf.tar.gz
 
   # Splicing junction
-  % wget https://storage.googleapis.com/friend1ws_package_data/savnet/junction.tar.gz
+  % wget https://zenodo.org/api/files/6dd7ee0c-4dce-45fe-9459-478fcd0e8102/junction.tar.gz
   % tar -zxvf junction.tar.gz
 
   # Intron retention
-  % wget https://storage.googleapis.com/friend1ws_package_data/savnet/intron_retention.tar.gz
+  % wget https://zenodo.org/api/files/6dd7ee0c-4dce-45fe-9459-478fcd0e8102/intron_retention.tar.gz
   % tar -zxvf intron_retention.tar.gz
 
   # Quality check
-  % wget https://storage.googleapis.com/friend1ws_package_data/savnet/qc.tar.gz
+  % wget https://zenodo.org/api/files/6dd7ee0c-4dce-45fe-9459-478fcd0e8102/qc.tar.gz
   % tar -zxvf qc.tar.gz
 
 
@@ -40,11 +40,11 @@ When using Annovar input file format file (optional):
 .. code-block:: none
 
   # Somatic mutation in Annovar input file format
-  % wget https://storage.googleapis.com/friend1ws_package_data/savnet/annovar.tar.gz
+  % wget https://zenodo.org/api/files/6dd7ee0c-4dce-45fe-9459-478fcd0e8102/annovar.tar.gz
   % tar -zxvf annovar.tar.gz
 
   # Reference genome
-  % wget https://storage.googleapis.com/friend1ws_package_data/common/GRCh37.fa
+  % wget ftp://ftp.ncbi.nih.gov/genomes/archive/old_genbank/Eukaryotes/vertebrates_mammals/Homo_sapiens/GRCh37/special_requests/GRCh37-lite.fa.gz
 
 
   
@@ -54,7 +54,7 @@ When using Annovar input file format file (optional):
 .. code-block:: none
 
   # Download the script for creating input list file
-  % wget https://storage.googleapis.com/friend1ws_package_data/savnet/make_savnet_input.py
+  % wget https://zenodo.org/api/files/6dd7ee0c-4dce-45fe-9459-478fcd0e8102/make_savnet_input.py
 
   # Generate the input list file by running the script
   % python make_savnet_input.py --sample_list_file savnet.input.txt --mut_dir vcf --sj_dir junction --ir_dir intron_retention --qc_dir qc
